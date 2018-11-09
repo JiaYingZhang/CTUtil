@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+    <meta charset="UTF-8">
+    <title>青塔招聘</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .container {
+            width: 800px;
+        }
+
+        .top-bar {
+            position: relative;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .top-bar img {
+            display: inline-block;
+            width: 90px;
+            height: auto;
+            margin: auto;
+        }
+
+        .top-bar::after,
+        .content-box::after {
+            content: '';
+            height: 2px;
+            position: absolute;
+            left: 15px;
+            right: 15px;
+            bottom: 0;
+            background-color: #4E7AD8;
+        }
+
+        .content-box,
+        .bottom-bar {
+            position: relative;
+            padding: 20px 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <img src="https://www.cingta.com/_nuxt/img/ctlogo.459f33d.jpg" alt="青塔人才">
+        </div>
+        <div class="content-box">
+            <p>老师您好，</p>
+            <br />
+            <p>
+                贵校在青塔人才上发布的职位信息<span style="text-decoration: underline">{{ position }}</span>已经接收到简历投递，请您尽快到青塔人才查看。
+            </p>
+            <p>
+                点击以下网址，在电脑上登陆青塔人才查看：
+            </p>
+            <p>
+                <a href="{{ url }}">{{ url }}</a>
+            </p>
+            <br />
+            <p>{{ date }}</p>
+        </div>
+        <div class="bottom-bar" style="text-align: center; position: relative; padding: 20px 30px;">
+            <p style="display: inline-block; background: #E6F2FE; margin: 0; margin-bottom: 20px;">如有疑问请拨打我们的咨询热线：0571-86686769</p>
+            <br />
+            <p style="display: inline-block; background: #E6F2FE; margin: 0">或者发送邮件到sq@cingta.com</p>
+        </div>
+    </div>
+</body>
+
+</html>
