@@ -1,22 +1,15 @@
-# -*- coding: utf-8 -*-
-
-import hashlib
 import json
-from datetime import datetime
 import time
 import uuid
 import os
 import random
-from typing import Dict
-
+from typing import Dict, Type
+from datetime import datetime, date
 from urllib.parse import quote
-from functools import wraps
 import requests
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.profile import region_provider
 from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
-from django.core.mail import send_mail
-from collections import namedtuple
 import base64
 from Crypto.Cipher import AES
 import logging
@@ -29,20 +22,19 @@ logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
 
 
-def image_path(files_dir='image', file_type='jpeg'):
-    dir_path = os.path.join('static', files_dir,
-                            time.strftime('%Y%m%d',
-                                          time.localtime(time.time())))
+def set_default_file_path(files_dir: str='image', file_type: str='jpeg') -> str:
+    _date: Type[date] = datetime.now().date()
+    dir_path = os.path.join('static', files_dir, format(_date, '%Y%m%d'))
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
     filename = '{file_name}.{file_type}'.format(
         file_name=str(uuid.uuid4()).replace('-', ''),
-        file_type=file_type, )
+        file_type=file_type)
     path = os.path.join(dir_path, filename)
     return path
 
 
-def process_base64_in_content(post: dict):
+def process_base64_in_content(post: dict) -> None:
     content: str = post.setdefault('content', '')
     if not content:
         return
@@ -52,56 +44,42 @@ def process_base64_in_content(post: dict):
     image_type = search_base64.group(1)
     image_base64_string = search_base64.group(2)
     image_decode = base64.b64decode(image_base64_string)
-    file_path = image_path(file_type=image_type)
+    file_path = set_default_file_path(file_type=image_type)
     with open(file_path, 'wb') as f:
         f.write(image_decode)
     content = content.replace(search_base64.group(), '\"{path}\"'.format(path=file_path))
     post['content'] = content
 
 
-def process_image_return_path(request, files_name='file', files_dir='image'):
-    dir_path = os.path.join("static", files_dir)
-
+def process_file_return_path(request, files_name: str='file', files_dir: str='image'):
     myFile = request.FILES.get(files_name)
+    if not myFile:
+        return
     if myFile:
-        mtime = time.strftime('%Y%m%d', time.localtime(time.time()))
-        dir_path = os.path.join(dir_path, mtime)
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-
-        laname = (myFile.name).split(".")
-        myfilename = str(uuid.uuid4()).replace("-", "") + "." + laname[-1]
-        fileurl = os.path.join(dir_path, myfilename)
-
-        with open(fileurl, 'wb+') as f:
+        file_type = (myFile.name).split(".")[-1]
+        file_path = set_default_file_path(file_type=file_type)
+        with open(file_path, 'wb+') as f:
             for chunk in myFile.chunks():
                 f.write(chunk)
-        return fileurl.replace('\\', '/')
-    return None
+        return file_path.replace('\\', '/')
 
 
-def process_images_return_pathlist(request, files_dir='image'):
-    dir_path = os.path.join("static", files_dir)
+def process_files_return_pathlist(request, files_dir: str='image'):
     myFiles = request.FILES
     data_list = []
     if myFiles:
-        mtime = time.strftime('%Y%m%d', time.localtime(time.time()))
-        dir_path = os.path.join(dir_path, mtime)
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
-
         for myFile in myFiles.itervalues():
-            laname = (myFile.name).split(".")
-            myfilename = str(uuid.uuid4()).replace("-", "") + "." + laname[-1]
-            fileurl = os.path.join(dir_path, myfilename)
-            with open(fileurl, 'wb+') as f:
+            file_type = (myFile.name).split(".")[-1]
+            file_path = set_default_file_path(file_type=file_type)
+            with open(file_path, 'wb+') as f:
                 for chunk in myFile.chunks():
                     f.write(chunk)
-            data_list.append(fileurl.replace('\\', '/'))
+            data_list.append(file_path.replace('\\', '/'))
     return data_list
 
 
 class SMS(object):
+    # 阿里云大于短信客户端接口
 
     REGION = "cn-hangzhou"
     PRODUCT_NAME = "Dysmsapi"
@@ -109,21 +87,18 @@ class SMS(object):
 
     def __init__(self, ACCESS_KEY_ID, ACCESS_KEY_SECRET, sign_name,
                  template_code):
-        # 创建客户端
         self.acs_client = AcsClient(ACCESS_KEY_ID, ACCESS_KEY_SECRET,
                                     self.REGION)
         region_provider.add_endpoint(self.PRODUCT_NAME, self.REGION,
                                      self.DOMAIN)
         self.business_id = uuid.uuid1()
 
-        # 短信签名
         self.sign_name = sign_name
-        # 短信模板
         self.template_code = template_code
         self.template_param = '"code": "{code}"'
 
     # 发送信息
-    def set_send_sms(self, phone, code):
+    def set_send_sms(self, phone: str, code: int):
         smsRequest = SendSmsRequest.SendSmsRequest()
         smsRequest.set_TemplateCode(self.template_code)
         smsRequest.set_TemplateParam('{' + self.template_param.format(
@@ -138,89 +113,28 @@ class SMS(object):
         return self.PRODUCT_NAME
 
 
-class Email(object):
+class SMSControl(object):
+    def __init__(self, sms_client: Type[SMS]):
+        self.sms_client: Type[SMS] = sms_client
 
-    SENED_EMAIL = 'kaka@cingta.com'
-    SUBJECT_STRING = '注册青塔'
-
-    def __init__(self, session, email):
-        self.session = session
-        self.email = email
-
-    def make_email_text(self):
-        text = """{session}""".format(session=self.session)
-        return text
-
-    @property
-    def email_msg(self):
-        data = {
-            'subject': self.SUBJECT_STRING,
-            'message': self.make_email_text(),
-            'from_email': self.SENED_EMAIL,
-            'recipient_list': [self.email],
-        }
-        return data
-
-    def __unicode__(self):
-        return 'send email {} to {}'.format(
-            self.SUBJECT_STRING,
-            self.email, )
-
-
-_state = namedtuple('FUNCSTATE', ['SUCCESS', 'FAIL'])
-_STATE = _state(0, -1)
-
-
-class VerificationControl(object):
-    def __init__(self, model):
-        self.smsmodel = model
-
-    def send_sms(self, VerificationControl, client):
+    def send_sms(self, phone: str):
         code = random.randint(1000, 9999)
-        s = self.smsmodel.objects.filter(
-            VerificationControl=VerificationControl).first()
-        if s:
-            now_time = datetime.now()
-            if (now_time - s.modifytime).seconds < 60:
-                return '一分钟只能发送一条信息'
-            s.code = str(code)
-        else:
-            s = self.smsmodel(
-                VerificationControl=VerificationControl, code=str(code))
-        sms_resp = client.set_send_sms(
-            VerificationControl=VerificationControl, code=code)
+        sms_resp = self.sms_client.set_send_sms(phone=phone, code=code)
         sms_resp = json.loads(sms_resp)
-        s.bizId = sms_resp.get('BizId', '')
+        return sms_resp
 
-        if sms_resp.get('Code') != 'OK':
-            s.error_msg = sms_resp.get('Code')
-            s.save()
-            return self._process_error_returncode(sms_resp.get('Code'))
-        s.save()
-        return 'OK'
-
-    def send_cingta_email(self, session, email):
-        mail = Email(session, email)
-        try:
-            send_mail(**mail.email_msg)
-            return _STATE.SUCCESS
-        except:
-            return _STATE.FAIL
-
-    def vadite_code(self, phone, code):
-        return self.smsmodel.objects.filter(
-            phone=phone, code=str(code)).exists()
-
-    def _process_error_returncode(self, code):
+    def _process_error_returncode(self, error_code: str):
         _return_error_dirct = {
             'isv.MOBILE_NUMBER_ILLEGAL': '请输入正确的手机号',
             'isv.BUSINESS_LIMIT_CONTROL': '你的手机号已被限流,请联系管理员',
             'default': '短信发送错误',
         }
-        return _return_error_dirct.get(code, _return_error_dirct['default'])
+        return _return_error_dirct.setdefault(error_code,
+                                              _return_error_dirct['default'])
 
 
 class WxLogin(object):
+    # 网页端微信第三方登录接口
     def __init__(self, APPID, APPSECRET):
         self.appid = APPID
         self.secret = APPSECRET
@@ -252,52 +166,8 @@ class WxLogin(object):
         return resp.get('unionid')
 
 
-class CTCache(object):
-    defalut_values = ('default', 'Article', 'Position')
-
-    def __init__(self, _type, timeout, data=''):
-        self.type = _type
-        self.data = data
-        self.timeout = timeout
-
-    @property
-    def cache_key(self):
-        md = hashlib.md5()
-        md.update(self.type + self.data)
-        md.digest()
-        key = md.hexdigest()
-        return key
-
-
-def set_static_cache(timeout=60):
-    def _set_static_cache(view_func):
-        @wraps(view_func)
-        def _do_something(request):
-            resp = view_func(request)
-            if getattr(resp, 'success', False):
-                setattr(resp, 'cache_data', True)
-                setattr(resp, 'cache_timeout', timeout)
-            return resp
-
-        return _do_something
-
-    return _set_static_cache
-
-
-def test_run_time(view_func):
-    @wraps(view_func)
-    def _do_something(request):
-        start_time = datetime.now()
-        n = view_func(request)
-        end_time = datetime.now()
-        s = end_time - start_time
-        print('TEST------------------', 'url<{}>, run time is: {}'.format(
-            view_func.__name__, s), '------------TEST')
-        return n
-    return _do_something
-
-
 class WXBizDataCrypt:
+    # 微信小程序解码, 腾讯官方代码, 直接调用
     def __init__(self, appId, sessionKey):
         self.appId = appId
         self.sessionKey = sessionKey
@@ -321,6 +191,7 @@ class WXBizDataCrypt:
 
 
 class WxMiniInterface(object):
+    # 微信小程序各种接口
     def __init__(self, APPID: str, APPSECRET: str):
         self.APPID = APPID
         self.APPSECRET = APPSECRET
