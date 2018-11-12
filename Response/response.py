@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from CTUtil.types import ResponseStatus
+from CTUtil.types import ResponseStates
 
 from typing import Dict, Any, Type, Union
 import json
@@ -16,9 +16,9 @@ def resp_to_json(data: Dict[str, Any]) -> HttpResponse:
     return resp
 
 
-def resp_error_json(error_msg: str, status: Type[ResponseStatus] = ResponseStatus.NOMAL_ERROR) -> HttpResponse:
+def resp_error_json(error_msg: str, state: Type[ResponseStates] = ResponseStates.NOMAL_ERROR) -> HttpResponse:
     _resp_data: Dict[str, Union[str, int]] = {
         'data': error_msg,
-        'status': status.value,
+        'state': state.value,
     }
     return resp_to_json(_resp_data)
