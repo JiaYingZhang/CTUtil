@@ -3,14 +3,15 @@
 ```python3
 # demo
 from typing import List
-from ctutil.email import send_cingta_email
+from CTUtil.email import send_cingta_email
+from CTUtil.types import FuncCallBack
 
 
 def run_send_email():
     if send_cingta_email(
         title='email title',
         to_email=['example@email.com', 'example2@email.com'],
-        ) == 1:
+        ) == FunCallBack.SUCCESS:
         return '发送成功'
     else:
         return '发送失败'
@@ -28,20 +29,6 @@ def run_send_email():
 | html_string| string | 否 | 发送html字符串, 若填写msg该项无效 |
 
 #### model
-
-```python3
-from ctuil.email.util import _NEED, _BUG
-```
-
-- _NEED
-  发送默认需求html页面
-
-- _BUG
-  发功bug html页面
-
-- 自定义html文本
-  model = 'your_html_file.html'
-
 
 #### Test
 
