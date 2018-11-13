@@ -1,4 +1,4 @@
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Type
 import os
 from jinja2 import Environment, select_autoescape, FileSystemLoader
 from CTUtil.types import EmailTypes
@@ -9,10 +9,6 @@ env = Environment(
     auto_reload=select_autoescape(['html', 'xml']))
 template = env.get_template('email_bug.html')
 
-_NEED = '需求'
-_BUG = 'BUG'
-ZHAOPING = '招聘'
-
 
 class CingTaEmail(object):
 
@@ -21,23 +17,16 @@ class CingTaEmail(object):
     def __init__(self,
                  title: str,
                  to_email: List[str],
-                 model: Union[str, None]=None,
+                 model: Type[EmailTypes]=EmailTypes.DEMAND,
                  msg: Union[str, None]=None,
                  from_email_name: str='cingta',
                  **kwargs) -> None:
 
         self.SENED_EMAIL = self.SENED_EMAIL.format(name=from_email_name)
-        if msg is None:
-            self.msg: str = ''
-        else:
-            self.msg: str = msg
+        self.msg: str = msg if msg else ''
 
         self.to_email: List[str] = to_email
-
-        if model is None:
-            self._html_model: str = _NEED
-        else:
-            self._html_model: str = model
+        self._html_model: Type[EmailTypes] = model
         self.title = title
         self.kwargs: Dict[str, str] = kwargs
 
@@ -57,25 +46,25 @@ class CingTaEmail(object):
         return data
 
     def _html_text(self) -> str:
-        html_text = self.kwargs.get('html_string')
+        html_text = self.kwargs.setdefault('html_string', '')
         if html_text:
             return html_text
-        return self._set_model_template.render(**self.kwargs)
+        template = env.get_template(self._set_model_template).render(**self.kwargs)
+        return template
 
     @property
     def _set_model_template(self) -> str:
-        _d: Dict[str, str] = {
-            _NEED: env.get_template('email_need.html'),
-            _BUG: env.get_template('email_bug.html'),
-            ZHAOPING: env.get_template('email_zhaoping.html')
+        email_type_mapping_template: Dict[Type[EmailTypes], str] = {
+            EmailTypes.DEMAND: 'email_need.html',
+            EmailTypes.BUG: 'email_bug.html',
+            EmailTypes.RECRUIT: 'email_zhaoping.html',
         }
-        if self._html_model not in _d.keys():
+        if self._html_model not in email_type_mapping_template.keys():
             raise ValueError('not this html model')
-        template: str = _d.get(self._html_model)
+        template: str = email_type_mapping_template.setdefault(self._html_model)
         return template
 
     def __unicode__(self) -> str:
-        return 'send email {} to {}'.format(
+        return 'send email: {} to {}'.format(
             self.SUBJECT_STRING,
             self.email, )
-

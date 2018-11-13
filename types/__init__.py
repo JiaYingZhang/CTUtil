@@ -31,4 +31,9 @@ class HTTPResponseStates(Enum):
 class EmailTypes(Enum):
     DEMAND = auto()
     BUG = auto()
-    ZHAOPING = auto()
+    RECRUIT = auto()
+
+
+class FuncCallBack(Enum):
+    FAIL = 0
+    SUCCESS = 1
