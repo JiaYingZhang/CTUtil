@@ -1,4 +1,13 @@
 from enum import Enum, auto
+from json import JSONEncoder
+from typing import Type
+
+
+class EnumJsonEncode(JSONEncoder):
+    def default(self, obj: Type[Enum]):
+        if isinstance(obj, Enum):
+            return obj.value
+        return JSONEncoder.default(self, obj)
 
 
 class ResponseStates(Enum):
@@ -17,3 +26,9 @@ class HTTPResponseStates(Enum):
     NOTFOUND = 400
     ERROR = 500
     FORBIDDEN = 403
+
+
+class EmailTypes(Enum):
+    DEMAND = auto()
+    BUG = auto()
+    ZHAOPING = auto()

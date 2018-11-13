@@ -1,9 +1,8 @@
 import json
-import time
 import uuid
 import os
 import random
-from typing import Dict, Type
+from typing import Dict, Type, Callable, Union
 from datetime import datetime, date
 from urllib.parse import quote
 import requests
@@ -15,21 +14,20 @@ from Crypto.Cipher import AES
 import logging
 import re
 
-
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
 
 
-def set_default_file_path(files_dir: str='image', file_type: str='jpeg') -> str:
+def set_default_file_path(files_dir: str='image',
+                          file_type: str='jpeg') -> str:
     _date: Type[date] = datetime.now().date()
     dir_path = os.path.join('static', files_dir, format(_date, '%Y%m%d'))
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
     filename = '{file_name}.{file_type}'.format(
-        file_name=str(uuid.uuid4()).replace('-', ''),
-        file_type=file_type)
+        file_name=str(uuid.uuid4()).replace('-', ''), file_type=file_type)
     path = os.path.join(dir_path, filename)
     return path
 
@@ -47,11 +45,14 @@ def process_base64_in_content(post: dict) -> None:
     file_path = set_default_file_path(file_type=image_type)
     with open(file_path, 'wb') as f:
         f.write(image_decode)
-    content = content.replace(search_base64.group(), '\"{path}\"'.format(path=file_path))
+    content = content.replace(
+        search_base64.group(), '\"{path}\"'.format(path=file_path))
     post['content'] = content
 
 
-def process_file_return_path(request, files_name: str='file', files_dir: str='image'):
+def process_file_return_path(request,
+                             files_name: str='file',
+                             files_dir: str='image'):
     myFile = request.FILES.get(files_name)
     if not myFile:
         return
@@ -117,8 +118,22 @@ class SMSControl(object):
     def __init__(self, sms_client: Type[SMS]):
         self.sms_client: Type[SMS] = sms_client
 
-    def send_sms(self, phone: str):
+    def send_sms(self,
+                 phone: str,
+                 func: Union[None, Callable[[str, int], None]]=None):
+        """
+        阿里大于接口返回
+        docstring here
+            return data: {
+                'RequestId': '请求id',
+                'Code': '状态码',
+                'Message': '状态码描述',
+                'BizId': '回执id',
+            }
+        """
         code = random.randint(1000, 9999)
+        if func:
+            func(phone, code)
         sms_resp = self.sms_client.set_send_sms(phone=phone, code=code)
         sms_resp = json.loads(sms_resp)
         return sms_resp

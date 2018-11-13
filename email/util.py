@@ -1,9 +1,11 @@
 from typing import Dict, Union, List
 import os
 from jinja2 import Environment, select_autoescape, FileSystemLoader
-this_file_path = os.path.dirname(os.path.abspath(__file__))
+from CTUtil.types import EmailTypes
+
+_BASE_FILE = os.path.dirname(os.path.abspath(__file__))
 env = Environment(
-    loader=FileSystemLoader(os.path.join(this_file_path, 'template')),
+    loader=FileSystemLoader(os.path.join(_BASE_FILE, 'template')),
     auto_reload=select_autoescape(['html', 'xml']))
 template = env.get_template('email_bug.html')
 
@@ -52,7 +54,6 @@ class CingTaEmail(object):
             'recipient_list': self.to_email,
             'html_message': self._html_text() if not self.msg else None,
         }
-        print(data['html_message'])
         return data
 
     def _html_text(self) -> str:

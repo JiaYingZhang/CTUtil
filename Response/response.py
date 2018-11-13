@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from CTUtil.types import ResponseStates
+from CTUtil.types import ResponseStates, EnumJsonEncode
 
 from typing import Dict, Any, Type, Union
 import json
@@ -8,7 +8,7 @@ import json
 def resp_to_json(data: Dict[str, Any]) -> HttpResponse:
     if not isinstance(data, dict):
         raise TypeError('data must be a dict')
-    resp = HttpResponse(json.dumps(data), content_type='application/json')
+    resp = HttpResponse(json.dumps(data, cls=EnumJsonEncode), content_type='application/json')
     resp['Access-Control-Allow-Headers'] = '*'
     resp['Access-Control-Allow-Origin'] = '*'
     resp['Access-Control-Allow-Credentials'] = True
@@ -19,6 +19,6 @@ def resp_to_json(data: Dict[str, Any]) -> HttpResponse:
 def resp_error_json(error_msg: str, state: Type[ResponseStates] = ResponseStates.NOMAL_ERROR) -> HttpResponse:
     _resp_data: Dict[str, Union[str, int]] = {
         'data': error_msg,
-        'state': state.value,
+        'state': state,
     }
     return resp_to_json(_resp_data)
