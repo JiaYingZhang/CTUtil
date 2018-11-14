@@ -22,7 +22,7 @@ class BaseView(object):
 
     def process_request_post(
             self, request: HttpRequest) -> Dict[str, Union[str, int]]:
-        return request.POST
+        return request.POST.copy()
 
     def query(self, request: HttpRequest) -> HttpResponse:
         return_data = {

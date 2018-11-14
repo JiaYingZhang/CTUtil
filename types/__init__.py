@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum, auto, IntEnum
 from json import JSONEncoder
 from typing import Type
 
@@ -10,30 +10,30 @@ class EnumJsonEncode(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 
-class ResponseStates(Enum):
+class ResponseStates(IntEnum):
     SUCCESS = 0
     NOMAL_ERROR = auto()
     LOGIN_ERROR = auto()
 
 
-class IsOrNot(Enum):
+class IsOrNot(IntEnum):
     NOT = 0
     IS = 1
 
 
-class HTTPResponseStates(Enum):
+class HTTPResponseStates(IntEnum):
     SUCCESS = 200
     NOTFOUND = 400
     ERROR = 500
     FORBIDDEN = 403
 
 
-class EmailTypes(Enum):
+class EmailTypes(IntEnum):
     DEMAND = auto()
     BUG = auto()
     RECRUIT = auto()
 
 
-class FuncCallBack(Enum):
+class FuncCallBack(IntEnum):
     FAIL = 0
     SUCCESS = 1

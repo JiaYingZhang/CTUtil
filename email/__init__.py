@@ -11,7 +11,7 @@ def send_cingta_email(
         model: Type[EmailTypes]=EmailTypes.DEMAND,
         msg: Union[None, str]=None,
         from_email_name: str='cingta',
-        **kwargs) -> FuncCallBack:
+        **kwargs) -> Type[FuncCallBack]:
     mail: Email = CingTaEmail(title, to_email, model, msg, from_email_name, **kwargs)
     try:
         send_mail(**mail.email_msg)
