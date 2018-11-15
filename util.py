@@ -2,17 +2,20 @@ import json
 import uuid
 import os
 import random
-from typing import Dict, Type, Callable, Union
+import logging
+import re
+import base64
+from typing import Dict, Type, Callable, Union, Any
 from datetime import datetime, date
 from urllib.parse import quote
 import requests
+
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.profile import region_provider
 from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
-import base64
 from Crypto.Cipher import AES
-import logging
-import re
+from CTUtil.types import DateSec
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
@@ -77,6 +80,18 @@ def process_files_return_pathlist(request, files_dir: str='image'):
                     f.write(chunk)
             data_list.append(file_path.replace('\\', '/'))
     return data_list
+
+
+class TokenSerializer(object):
+
+    def __init__(self, salt: str, overtime_sec: Type[DateSec]=DateSec.DAY):
+        self.s = Serializer(salt, expires_in=overtime_sec)
+
+    def encode(self, data: Dict[str, Any]) -> bytes:
+        return self.s.dumps(data)
+
+    def decode(self, data: bytes) -> Dict[str, Any]:
+        return self.s.loads(data)
 
 
 class SMS(object):

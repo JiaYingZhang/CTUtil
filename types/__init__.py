@@ -37,3 +37,9 @@ class EmailTypes(IntEnum):
 class FuncCallBack(IntEnum):
     FAIL = 0
     SUCCESS = 1
+
+
+class DateSec(IntEnum):
+    ONE = 1
+    DAY = 3600
+    MONTH = 30 * 3600
