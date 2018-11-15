@@ -1,7 +1,21 @@
 from django.http import HttpRequest, HttpResponse
 from CTUtil.Response.response import resp_error_json, resp_to_json
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Type
 from django.conf.urls import url
+from enum import Enum, auto
+
+
+class ControlMethods(Enum):
+    delete = auto()
+    add = auto()
+    update = auto()
+    query = auto()
+
+    def __str__(self):
+        return self.name
+
+    def __unicode__(self):
+        return self.__str__()
 
 
 class BaseView(object):
@@ -9,8 +23,6 @@ class BaseView(object):
     model_name = None
     route_name = None
     methods = ['delete', 'update', 'add', 'query']
-    protect = True
-    process_request = []
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -84,18 +96,20 @@ class BaseView(object):
         return resp
 
     @classmethod
-    def as_view(cls, _method, **init):
+    def as_view(cls, _method: Type[ControlMethods], **init):
         def view(request: HttpRequest, *args, **kwargs):
             self = cls(**init)
-            handle = getattr(self, _method, 'default')
-            return handle(request, *args, **kwargs)
+            return self.dispatch(_method, request, *args, **kwargs)
         return view
+
+    def dispatch(self, _method: Type[ControlMethods], request, *args, **kwargs):
+        handle = getattr(self, _method.name, 'default')
+        return handle(request, *args, **kwargs)
 
     @classmethod
     def as_urls(cls, django_url_list):
-        _methods: List[str] = cls.methods if not cls.protect else ['add', 'query']
-        for method_name in _methods:
+        for control_method in ControlMethods:
             path = '{method_name}-{route_name}'.format(
-                method_name=method_name,
+                method_name=control_method,
                 route_name=cls.route_name, )
-            django_url_list.append(url(path, cls.as_view(method_name)))
+            django_url_list.append(url(path, cls.as_view(control_method)))
