@@ -1,8 +1,28 @@
 from django.http import HttpRequest, HttpResponse
 from CTUtil.Response.response import resp_error_json, resp_to_json
-from typing import Dict, Union, List, Type
+from typing import Dict, Union, Type
 from django.conf.urls import url
 from enum import Enum, auto
+from CTUtil.types import ResponseStates
+from functools import wraps
+
+
+class LoginMixin(object):
+    def dispatch(self, _method, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return resp_error_json('用户未登录', ResponseStates.LOGIN_ERROR)
+        return super(LoginMixin, self).dispatch(_method, request, *args,
+                                                **kwargs)
+
+    @classmethod
+    def login_require(view_func):
+        @wraps(view_func)
+        def _process_request(request: Type[HttpRequest]):
+            if request.user.is_authenticated:
+                return resp_error_json('用户未登录', ResponseStates.LOGIN_ERROR)
+            return view_func(request)
+
+        return _process_request
 
 
 class ControlMethods(Enum):
