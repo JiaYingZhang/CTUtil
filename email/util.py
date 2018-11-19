@@ -57,6 +57,7 @@ class CingTaEmail(object):
             EmailTypes.DEMAND: 'email_need.html',
             EmailTypes.BUG: 'email_bug.html',
             EmailTypes.RECRUIT: 'email_zhaoping.html',
+            EmailTypes.REGISTER: 'email_register.html',
         }
         if self._html_model not in email_type_mapping_template.keys():
             raise ValueError('not this html model')

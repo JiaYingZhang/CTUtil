@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>邮箱邀请</title>
+	<style>
+		html,body{
+			height: 100%;
+			margin: 0;
+			background-color: #F4F8F9;
+			position: relative;
+			font-smoothing:antialiased;
+			-webkit-font-smoothing:antialiased;
+			font-family:'PingFangSC-Regular','Microsoft Yahei','helvetica neue','hiragino sans gb','arial','microsoft yahei ui','microsoft yahei','simsun','sans-serif';
+		}
+		.top-tit{
+			text-align: center;
+			border-bottom: 1px solid #efefef;
+		}
+		.top-tit>span{
+			display: block;
+			margin: auto;
+			background-color: #4EE3C1;
+			width: 42px;
+			height: 42px;
+			border-radius: 50%;
+		}
+		.top-tit>h2{
+			margin: 20px 0;
+			color: #3d464d;
+			font-size: 20px;
+		}
+		.top-tit>.line{
+			margin-top: 10px;
+			height: 4px;
+			width: 40px;
+			border-radius: 0;
+		}
+		.top-tit>span img{
+			display: inline-block;
+			width: 30px;
+			height: 30px;
+			margin-top: 6px;
+		}
+		.main-container{
+			height: 100%;
+			position: relative;
+		}
+		.center-box{
+			padding: 30px;
+			width: 500px;
+			background-color: #fff;
+			box-shadow: 0 3px 8px #e6e8ec;
+			border-radius: 6px;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%,-50%);
+			-webkit-transform: translate(-50%,-50%);
+		}
+		.content>h3{
+			margin: 30px 0 20px;
+		}
+		.content>p{
+			margin: 5px 0;
+			font-size: 15px;
+			color: #606266;
+		}
+		.content>p a{
+			cursor: pointer;
+			color: #4fbcff;
+		}
+		.content>p a:active,
+		.content>p a:hover{
+			text-decoration: underline;
+		}
+		.content>p img{
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			vertical-align: middle;
+			margin-bottom: 4px;
+		}
+		.content>a{
+			font-size: 14px;
+			display: inline-block;
+			text-decoration: none;
+			color: #fff;
+			background: #4EE3C1;
+			background: -webkit-linear-gradient(90deg, #5AE1CE, #40D5E6);
+			background: -o-linear-gradient(90deg, #5AE1CE, #40D5E6);
+			background: linear-gradient(90deg, #5AE1CE, #40D5E6); 
+			padding: 6px 20px;
+			border-radius: 3px;
+			margin: 10px 0 10px;
+		}
+		.content>a:active,
+		.content>a:hover{
+			opacity: 0.8;
+		}
+		.content>h3 span{
+			color: #55debf;
+		}
+		.bot-tit{
+			margin-top: 100px;
+			border-top: 1px solid #efefef;
+		}
+		.bot-tit>p{
+			font-size: 14px;
+			color: #bfbfbf;
+			text-align: center;
+			margin: 20px 0 0;
+		}
+	</style>
+</head>
+<body>
+	<div class="main-container">
+		<div class="center-box">
+			<div class="top-tit">
+				<span>
+					<img src="./img/logo.png" alt="">
+				</span>
+				<span class="line">
+				</span>
+				<h2>{{ creator }}邀请您加入内部流程管理项目</h2>
+			</div>
+			<div class="content">
+				<h3>
+					Hi，
+					<span>
+						<!-- {hary@cingta.com} -->
+						{{ username }}
+					</span>
+				</h3>
+				<p>{{ creator }}邀请您加入内部流程管理项目：
+					<span>
+						<img src="./img/user.png" alt="">
+						{{ role }}
+					</span>
+				</p>
+				<p>请点击下方按钮注册并加入：</p>
+				<a href="{{ token_url }}">
+					注册并加入
+				</a>
+				<p>
+					如果按钮无法点击，请点击或复制一下链接到浏览器地址栏打开：
+					<a href="{{ token_url }}">
+						{{ token_url }}
+					</a>
+				</p>
+			</div>
+			<div class="bot-tit">
+				<p>
+					本邮件由系统自动发送，请勿回复
+				</p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
