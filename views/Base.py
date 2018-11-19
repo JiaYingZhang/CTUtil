@@ -16,10 +16,10 @@ class LoginMixin(object):
                                                 **kwargs)
 
     @classmethod
-    def login_require(view_func):
+    def login_require(cls, view_func):
         @wraps(view_func)
         def _process_request(request: Type[HttpRequest]):
-            if request.user.is_authenticated:
+            if not request.user.is_authenticated:
                 return resp_error_json('用户未登录', ResponseStates.LOGIN_ERROR)
             return view_func(request)
 

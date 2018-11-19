@@ -14,6 +14,7 @@ class ResponseStates(IntEnum):
     SUCCESS = 0
     NOMAL_ERROR = auto()
     LOGIN_ERROR = auto()
+    PERMISSION_ERROR = auto()
 
 
 class IsOrNot(IntEnum):
@@ -32,6 +33,7 @@ class EmailTypes(IntEnum):
     DEMAND = auto()
     BUG = auto()
     RECRUIT = auto()
+    REGISTER = auto()
 
 
 class FuncCallBack(IntEnum):
@@ -42,4 +44,5 @@ class FuncCallBack(IntEnum):
 class DateSec(IntEnum):
     ONE = 1
     DAY = 3600
+    WEEK = 7 * 3600
     MONTH = 30 * 3600

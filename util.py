@@ -5,7 +5,7 @@ import random
 import logging
 import re
 import base64
-from typing import Dict, Type, Callable, Union, Any
+from typing import Dict, Type, Callable, Union, Any, List
 from datetime import datetime, date
 from urllib.parse import quote
 import requests
@@ -16,11 +16,27 @@ from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
 from Crypto.Cipher import AES
 from CTUtil.types import DateSec
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from django.conf.urls import RegexURLPattern
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
+
+
+def get_django_all_url(urlpatterns: List[Any]):
+    urls = []
+
+    def search_url(src_urls: List[Any], root: str, pre_urls: List[str]):
+        for url in src_urls:
+            _root = os.path.join(root, url._regex).replace('^', '')
+            if isinstance(url, RegexURLPattern):
+                pre_urls.append(_root)
+            else:
+                search_url(url.url_patterns, _root, pre_urls)
+
+    search_url(urlpatterns, '/', urls)
+    return urls
 
 
 def set_default_file_path(files_dir: str='image',

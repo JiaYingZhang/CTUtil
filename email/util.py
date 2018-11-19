@@ -7,7 +7,6 @@ _BASE_FILE = os.path.dirname(os.path.abspath(__file__))
 env = Environment(
     loader=FileSystemLoader(os.path.join(_BASE_FILE, 'template')),
     auto_reload=select_autoescape(['html', 'xml']))
-template = env.get_template('email_bug.html')
 
 
 class CingTaEmail(object):

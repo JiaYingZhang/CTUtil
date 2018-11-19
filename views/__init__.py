@@ -1,3 +1,3 @@
-from CTUtil.views.Base import BaseView
+from CTUtil.views.Base import BaseView, LoginMixin
 
-__all__ = ['BaseView']
+__all__ = ['BaseView', 'LoginMixin']
