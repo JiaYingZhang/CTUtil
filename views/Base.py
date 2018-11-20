@@ -5,7 +5,6 @@ from django.conf.urls import url
 from enum import Enum, auto
 from CTUtil.types import ResponseStates
 from functools import wraps
-from django.core.signing import TimestampSigner
 
 
 class LoginMixin(object):
@@ -26,7 +25,7 @@ class LoginMixin(object):
         return _process_request
 
 
-class ControlMethods(Enum):
+class RequestCtrlMethods(Enum):
     delete = auto()
     add = auto()
     update = auto()
@@ -43,7 +42,7 @@ class BaseView(object):
 
     model_name = None
     route_name = None
-    methods = ['delete', 'update', 'add', 'query']
+    process_request = []
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -85,7 +84,7 @@ class BaseView(object):
         reqall: Dict[str, str] = self.process_request_post(request)
         _id: int = int(reqall.setdefault('id', 0))
         if not _id:
-            return resp_to_json('id不允许为空')
+            return resp_error_json('id不允许为空')
         reqall.pop('id')
         query = self.model_name.objects.filter(id=_id)
         if not query:
@@ -107,29 +106,22 @@ class BaseView(object):
         }
         return resp_error_json(return_data)
 
-    def default(self, request: HttpRequest) -> HttpResponse:
-        return_data: Dict[str, Union[str, int]] = {
-            'state': 1,
-            'data': 'error url path',
-        }
-        resp: HttpResponse = resp_to_json(return_data)
-        resp.status_code = 404
-        return resp
-
     @classmethod
-    def as_view(cls, _method: Type[ControlMethods], **init):
+    def as_view(cls, _method: Type[RequestCtrlMethods], **init):
         def view(request: HttpRequest, *args, **kwargs):
             self = cls(**init)
             return self.dispatch(_method, request, *args, **kwargs)
         return view
 
-    def dispatch(self, _method: Type[ControlMethods], request, *args, **kwargs):
-        handle = getattr(self, _method.name, 'default')
+    def dispatch(self, _method: Type[RequestCtrlMethods], request, *args, **kwargs):
+        handle = getattr(self, _method.name)
+        for func in self.process_request:
+            handle = func(handle)
         return handle(request, *args, **kwargs)
 
     @classmethod
     def as_urls(cls, django_url_list):
-        for control_method in ControlMethods:
+        for control_method in RequestCtrlMethods:
             path = '{method_name}-{route_name}'.format(
                 method_name=control_method,
                 route_name=cls.route_name, )
