@@ -7,6 +7,7 @@ from functools import wraps
 from typing import Type
 from traceback import print_exc
 import time
+from itsdangerous import SignatureExpired
 
 
 def login_require(token_object: Type[TokenSerializer], valid_modle: Type[Model]):
@@ -23,6 +24,9 @@ def login_require(token_object: Type[TokenSerializer], valid_modle: Type[Model])
                     return resp_error_json('用户不存在')
                 request.user = user
                 return view_func(request)
+
+            except SignatureExpired as ex:
+                return resp_error_json('用户已过期, 请重新登录', ResponseStates.LOGIN_ERROR)
             except Exception as ex:
                 print_exc()
                 return resp_error_json('系统错误')

@@ -73,7 +73,7 @@ class BaseView(object):
         query = self.model_name.objects.filter(id=_id)
         if not query:
             return resp_error_json('数据不存在')
-        query.update(reqall)
+        query.update(**reqall)
         return_data: Dict[str, Union[str, int]] = {
             'state': 0,
             'data': '修改成功',
@@ -90,7 +90,7 @@ class BaseView(object):
             'state': 0,
             'data': '新增成功',
         }
-        return resp_error_json(return_data)
+        return resp_to_json(return_data)
 
     @classmethod
     def as_view(cls, _method: Type[RequestCtrlMethods], **init):
