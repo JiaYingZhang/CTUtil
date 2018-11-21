@@ -43,6 +43,7 @@ class FuncCallBack(IntEnum):
 
 class DateSec(IntEnum):
     ONE = 1
-    DAY = 3600
-    WEEK = 7 * 3600
-    MONTH = 30 * 3600
+    HOUR = 3600
+    DAY = 24 * 3600
+    WEEK = 24 * 7 * 3600
+    MONTH = 24 * 30 * 3600

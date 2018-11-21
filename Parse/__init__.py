@@ -22,7 +22,7 @@ def parse_multiple_key(data: Dict[Any, Any],
                 data,
                 '.'.join(keys_list[1:]),
                 split_word=split_word,
-                deepest=deepest)
+                deepest=deepest - 1)
 
 
 class CingtaSerialize(object):

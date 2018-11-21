@@ -34,7 +34,11 @@ class BaseView(object):
 
     def process_request_post(
             self, request: HttpRequest) -> Dict[str, Union[str, int]]:
-        return request.POST.copy()
+        data = request.POST.copy()
+        _data: Dict[str, str] = {}
+        for key in data:
+            _data[key] = data.setdefault(key, '')
+        return _data
 
     def query(self, request: HttpRequest) -> HttpResponse:
         return_data = {
@@ -79,6 +83,8 @@ class BaseView(object):
     def add(self, request: HttpRequest) -> HttpResponse:
         self.process_model_and_route()
         reqall: Dict[str, Union[str, int]] = self.process_request_post(request)
+        if 'id' in reqall:
+            del reqall['id']
         self.model_name.objects.create(**reqall)
         return_data: Dict[str, Union[str, int]] = {
             'state': 0,
