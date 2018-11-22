@@ -1,6 +1,5 @@
 from django.http import HttpResponse
 from CTUtil.types import ResponseStates, EnumJsonEncode
-
 from typing import Dict, Any, Type, Union
 import json
 
