@@ -1,7 +1,6 @@
 import json
 import uuid
 import os
-import random
 import logging
 import re
 import base64
@@ -17,6 +16,7 @@ from Crypto.Cipher import AES
 from CTUtil.types import DateSec
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from django.conf.urls import RegexURLPattern
+import random
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
@@ -69,6 +69,11 @@ def process_base64_in_content(post: dict) -> None:
     post['content'] = content
 
 
+def make_code(count: int=4) -> str:
+    data = [str(random.randint(0, 9)) for i in range(count)]
+    return ''.join(data)
+
+
 def process_file_return_path(request,
                              files_name: str='file',
                              files_dir: str='image'):
@@ -112,6 +117,16 @@ class TokenSerializer(object):
 
 class SMS(object):
     # 阿里云大于短信客户端接口
+    """
+        阿里大于接口返回
+        docstring here
+            return data: {
+                'RequestId': '请求id',
+                'Code': '状态码',
+                'Message': '状态码描述',
+                'BizId': '回执id',
+            }
+    """
 
     REGION = "cn-hangzhou"
     PRODUCT_NAME = "Dysmsapi"
@@ -123,60 +138,29 @@ class SMS(object):
                                     self.REGION)
         region_provider.add_endpoint(self.PRODUCT_NAME, self.REGION,
                                      self.DOMAIN)
-        self.business_id = uuid.uuid1()
 
         self.sign_name = sign_name
         self.template_code = template_code
-        self.template_param = '"code": "{code}"'
+        # self.template_param = '"code": "{code}"'
 
     # 发送信息
-    def set_send_sms(self, phone: str, code: int):
+    def send_sms(self, phone: str, code: int, context: Union[None, Dict[str, Any]]=None):
+        business_id = uuid.uuid1()
         smsRequest = SendSmsRequest.SendSmsRequest()
         smsRequest.set_TemplateCode(self.template_code)
-        smsRequest.set_TemplateParam('{' + self.template_param.format(
-            code=code) + '}')
+        # smsRequest.set_TemplateParam('{' + self.template_param.format(
+        #     code=code) + '}')
+        if context:
+            smsRequest.set_TemplateParam(json.dumps(context))
+        smsRequest.set_OutId(business_id)
         smsRequest.set_SignName(self.sign_name)
         smsRequest.set_PhoneNumbers(phone)
 
-        smsResponse = self.acs_client.do_action_with_exception(smsRequest)
-        return smsResponse
+        smsResponse: bytes = self.acs_client.do_action_with_exception(smsRequest)
+        return json.loads(smsResponse)
 
     def __unicode__(self):
         return self.PRODUCT_NAME
-
-
-class SMSControl(object):
-    def __init__(self, sms_client: Type[SMS]):
-        self.sms_client: Type[SMS] = sms_client
-
-    def send_sms(self,
-                 phone: str,
-                 func: Union[None, Callable[[str, int], None]]=None):
-        """
-        阿里大于接口返回
-        docstring here
-            return data: {
-                'RequestId': '请求id',
-                'Code': '状态码',
-                'Message': '状态码描述',
-                'BizId': '回执id',
-            }
-        """
-        code = random.randint(1000, 9999)
-        if func:
-            func(phone, code)
-        sms_resp = self.sms_client.set_send_sms(phone=phone, code=code)
-        sms_resp = json.loads(sms_resp)
-        return sms_resp
-
-    def _process_error_returncode(self, error_code: str):
-        _return_error_dirct = {
-            'isv.MOBILE_NUMBER_ILLEGAL': '请输入正确的手机号',
-            'isv.BUSINESS_LIMIT_CONTROL': '你的手机号已被限流,请联系管理员',
-            'default': '短信发送错误',
-        }
-        return _return_error_dirct.setdefault(error_code,
-                                              _return_error_dirct['default'])
 
 
 class WxLogin(object):
