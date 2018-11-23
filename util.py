@@ -141,15 +141,12 @@ class SMS(object):
 
         self.sign_name = sign_name
         self.template_code = template_code
-        # self.template_param = '"code": "{code}"'
 
     # 发送信息
     def send_sms(self, phone: str, code: int, context: Union[None, Dict[str, Any]]=None):
         business_id = uuid.uuid1()
         smsRequest = SendSmsRequest.SendSmsRequest()
         smsRequest.set_TemplateCode(self.template_code)
-        # smsRequest.set_TemplateParam('{' + self.template_param.format(
-        #     code=code) + '}')
         if context:
             smsRequest.set_TemplateParam(json.dumps(context))
         smsRequest.set_OutId(business_id)

@@ -16,7 +16,7 @@ def login_require(token_object: Type[TokenSerializer], valid_modle: Type[Model])
         def _do_someting(request: Type[HttpRequest]):
             token: str = request.META.setdefault('HTTP_TOKEN')
             if not token:
-                return resp_error_json('用户未登录', ResponseStates.LOGIN_ERROR)
+                return resp_error_json('请先登录系统', ResponseStates.LOGIN_ERROR)
             try:
                 _id: int = int(token_object.decode(token.encode()).setdefault('user_id', 0))
                 user = valid_modle.objects.filter(id=_id).first()
