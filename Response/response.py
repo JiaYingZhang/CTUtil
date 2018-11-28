@@ -24,3 +24,13 @@ def resp_error_json(error_msg: str, state: Type[ResponseStates] = ResponseStates
         'state': state,
     }
     return resp_to_json(_resp_data)
+
+
+def resp_to_file(file: Union[str, bytes], filename: str) -> HttpResponse:
+    resp = HttpResponse(file, content_type='application/octet-stream')
+    resp['Content-Disposition'] = f'attachment; filename="{filename}"'
+    resp['Access-Control-Allow-Headers'] = '*'
+    resp['Access-Control-Allow-Origin'] = '*'
+    resp['Access-Control-Allow-Credentials'] = True
+    resp['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
+    return resp
