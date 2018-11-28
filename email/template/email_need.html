@@ -1,8 +1,87 @@
-<html>
-    <body>
-        <h3> 青塔 </h3>
-        <div>
-            你有一个新的需求需要处理.
+<!DOCTYPE html>
+<html lang="en" style="height:100%">
+
+<head>
+    <meta charset="UTF-8">
+    <title>任务提醒</title>
+</head>
+
+<body style="height:100%;margin:0;background-color:#F4F8F9;position:relative;font-smoothing:antialiased;-webkit-font-smoothing:antialiased;font-family:'PingFangSC-Regular','Microsoft Yahei','helvetica neue','hiragino sans gb','arial','microsoft yahei ui','microsoft yahei','simsun','sans-serif';">
+    <div class="main-container" style="height: 100%;
+			position: relative;">
+        <div class="center-box" style="padding: 30px;
+			width: 500px;
+			background-color: #fff;
+			box-shadow: 0 3px 8px #e6e8ec;
+			border-radius: 6px;">
+            <div class="top-tit" style="text-align: center;border-bottom: 1px solid #efefef;">
+                <span style="display: block;
+			margin: auto;
+			background-color: #4EE3C1;
+			width: 42px;
+			height: 42px;
+			border-radius: 50%;">
+                    <img style="display: inline-block;
+			width: 30px;
+			height: 30px;
+			margin-top: 6px;" src="http://118.31.165.166:12101/static/email/logo.png"
+                        alt="">
+                </span>
+                <span class="line" style="display: block;margin: auto;background-color: #4EE3C1;margin-top: 10px;
+			height: 4px;
+			width: 40px;
+			border-radius: 0;">
+                </span>
+                <h2 style="margin: 20px 0;
+			color: #3d464d;
+			font-size: 20px;">{{ realname }}有新的任务需要处理.</h2>
+            </div>
+            <div class="content">
+                <h3 style="margin: 30px 0 20px;">
+                    Hi，
+                    <span style="color: #55debf;">
+                        {{ realname }}
+                    </span>
+                </h3>
+                <p style="margin: 5px 0;
+			font-size: 15px;
+			color: #606266;">你有一项新的待处理任务, 请点击下方按钮快速访问平台:
+                </p>
+                <a style="font-size: 14px;
+			display: inline-block;
+			text-decoration: none;
+			color: #fff;
+			background: #4EE3C1;
+			background: -webkit-linear-gradient(90deg, #5AE1CE, #40D5E6);
+			background: -o-linear-gradient(90deg, #5AE1CE, #40D5E6);
+			background: linear-gradient(90deg, #5AE1CE, #40D5E6); 
+			padding: 6px 20px;
+			border-radius: 3px;
+			margin: 10px 0 10px;"
+                    href="{{ url }}">
+                    点击进入
+                </a>
+                <p style="margin: 5px 0;
+			font-size: 15px;
+			color: #606266;">
+                    如果按钮无法点击，请点击或复制一下链接到浏览器地址栏打开：
+                    <a style="cursor: pointer;
+			color: #4fbcff;" href="{{ url }}">
+                        {{ url }}
+                    </a>
+                </p>
+            </div>
+            <div class="bot-tit" style="margin-top: 100px;
+			border-top: 1px solid #efefef;">
+                <p style="font-size: 14px;
+			color: #bfbfbf;
+			text-align: center;
+			margin: 20px 0 0;">
+                    本邮件由系统自动发送，请勿回复
+                </p>
+            </div>
         </div>
-    </body>
+    </div>
+</body>
+
 </html>
