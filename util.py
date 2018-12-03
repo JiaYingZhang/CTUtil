@@ -8,15 +8,21 @@ from typing import Dict, Type, Callable, Union, Any, List
 from datetime import datetime, date
 from urllib.parse import quote
 import requests
+from traceback import print_exc
 
-from aliyunsdkcore.client import AcsClient
-from aliyunsdkcore.profile import region_provider
-from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
 from Crypto.Cipher import AES
 from CTUtil.types import DateSec
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from django.conf.urls import RegexURLPattern
 import random
+
+try:
+    from aliyunsdkcore.client import AcsClient
+    from aliyunsdkcore.profile import region_provider
+    from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
+except:
+    print_exc()
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
