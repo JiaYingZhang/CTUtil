@@ -4,7 +4,7 @@ import os
 import logging
 import re
 import base64
-from typing import Dict, Type, Callable, Union, Any, List
+from typing import Dict, Type, Callable, Union, Any, List, Iterable
 from datetime import datetime, date
 from urllib.parse import quote
 import requests
@@ -28,6 +28,10 @@ logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
+
+
+def queryset_paging(queryset: Iterable[Any], page: int, page_size: int):
+    return queryset[page * page_size: (page + 1) * page_size]
 
 
 def get_django_all_url(urlpatterns: List[Any]):
