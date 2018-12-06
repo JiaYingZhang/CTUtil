@@ -1,6 +1,6 @@
 from django.http import HttpRequest, HttpResponse
 from CTUtil.Response.response import resp_error_json, resp_to_json
-from typing import Dict, Union, Type
+from typing import Dict, Union, Type, Any, List
 from django.conf.urls import url
 from enum import Enum, auto
 
@@ -18,6 +18,15 @@ class RequestCtrlMethods(Enum):
         return self.__str__()
 
 
+class BaseViewMeta(type):
+    def __new__(cls, clsname, bases, clsdict: Dict[str, Any]):
+        must_argv: List[str] = ['model_name', 'route_name']
+        for argv in must_argv:
+            if bases and not clsdict.setdefault(argv, None):
+                raise ValueError('Views must be model_name and route_name')
+        return super().__new__(cls, clsname, bases, clsdict)
+
+
 class BaseView(object):
 
     model_name = None
@@ -27,10 +36,6 @@ class BaseView(object):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-    def process_model_and_route(self):
-        if not (self.model_name and self.route_name):
-            raise ValueError('model_name or route_name is None')
 
     def process_request_post(
             self, request: HttpRequest) -> Dict[str, Union[str, int]]:
@@ -48,7 +53,6 @@ class BaseView(object):
         return resp_to_json(return_data)
 
     def delete(self, request: HttpRequest) -> HttpResponse:
-        self.process_model_and_route()
         reqall: Dict[str, str] = request.POST
         _id: int = int(reqall.get('id', 0))
         if not _id:
@@ -64,7 +68,6 @@ class BaseView(object):
         return resp_to_json(return_data)
 
     def update(self, request: HttpRequest) -> HttpResponse:
-        self.process_model_and_route()
         reqall: Dict[str, str] = self.process_request_post(request)
         _id: int = int(reqall.setdefault('id', 0))
         if not _id:
@@ -81,7 +84,6 @@ class BaseView(object):
         return resp_to_json(return_data)
 
     def add(self, request: HttpRequest) -> HttpResponse:
-        self.process_model_and_route()
         reqall: Dict[str, Union[str, int]] = self.process_request_post(request)
         if 'id' in reqall:
             del reqall['id']
