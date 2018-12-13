@@ -1,5 +1,7 @@
 from typing import Dict, Any, List
+from CTUtil.Parse.util import DjangoSerializer
 
+__all__ = ['DjangoSerializer', 'parse_multiple_key']
 
 def parse_multiple_key(data: Dict[Any, Any],
                        key_string: str,
@@ -23,28 +25,3 @@ def parse_multiple_key(data: Dict[Any, Any],
                 '.'.join(keys_list[1:]),
                 split_word=split_word,
                 deepest=deepest - 1)
-
-
-class CingtaSerialize(object):
-    model = None
-    exclude = []
-
-    @classmethod
-    def get_need_fieldname(cls):
-        fields = []
-        for field in cls.model._meta.get_fields():
-            if field.name not in cls.exclude:
-                fields.append(field.name)
-        return fields
-
-    @classmethod
-    def queryset_to_json(cls, qs):
-        _d = {}
-        if qs:
-            for name in cls.get_need_fieldname():
-                value = getattr(qs, name)
-                if value:
-                    _d[name] = str(value)
-                else:
-                    _d[name] = ''
-        return _d

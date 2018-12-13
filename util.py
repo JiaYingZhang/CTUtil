@@ -31,7 +31,11 @@ logger_formatter = logging.Formatter(
 
 
 def queryset_paging(queryset: Iterable[Any], page: int, page_size: int):
-    return queryset[page * page_size: (page + 1) * page_size]
+    return queryset[(page - 1) * page_size: page * page_size]
+
+
+def jstimestamp_to_datetime(jstimestamp: int):
+    return datetime.fromtimestamp(jstimestamp // 1000)
 
 
 def get_django_all_url(urlpatterns: List[Any]):
