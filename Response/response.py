@@ -1,6 +1,6 @@
 from django.http import HttpResponse
-from CTUtil.types import ResponseStates, EnumJsonEncode
-from CTUtil.Parse import DjangoSerializer 
+from CTUtil.types import ResponseStates
+from CTUtil.Parse import DjangoSerializer
 from typing import Dict, Any, Type, Union
 import json
 
