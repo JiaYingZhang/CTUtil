@@ -24,10 +24,13 @@ class BaseViewMeta(type):
         for argv in must_argv:
             if bases and not clsdict.setdefault(argv, None):
                 raise ValueError('Views must be model_name and route_name')
+        route_name: str = clsdict.setdefault('route_name', None)
+        if route_name:
+            clsdict['route_name'] = f'{route_name}/' if not route_name.endswith('/') else route_name
         return super().__new__(cls, clsname, bases, clsdict)
 
 
-class BaseView(object):
+class BaseView(metaclass=BaseViewMeta):
 
     model_name = None
     route_name = None

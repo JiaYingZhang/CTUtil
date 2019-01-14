@@ -23,13 +23,12 @@ def login_require(token_object: Type[TokenSerializer], valid_modle: Type[Model])
                 if not user:
                     return resp_error_json('用户不存在')
                 request.user = user
-                return view_func(request)
-
             except SignatureExpired as ex:
                 return resp_error_json('用户已过期, 请重新登录', ResponseStates.LOGIN_ERROR)
             except Exception as ex:
                 print_exc()
                 return resp_error_json('系统错误')
+            return view_func(request)
         return _do_someting
     return _login_require
 
