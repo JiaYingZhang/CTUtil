@@ -66,9 +66,9 @@ class EsFormat(object):
         }
 
     @classmethod
-    def highlight_format(cls, keys: List[str]):
+    def highlight_format(cls, *args):
         _hl: Dict[str, str] = {}
-        for key in keys:
+        for key in args:
             _hl.update({key: {}})
         return {
             'highlight': {
@@ -95,6 +95,27 @@ class EsFormat(object):
                 'match_all': {},
             }
         }
+
+    @classmethod
+    def sort_format(cls, *args: List[str]):
+        _format: Dict[str, Any] = {}
+        sort_keys: Dict[str, Any] = _format.setdefault('sort', {})
+        for key in args:
+            if key.startswith('-'):
+                key = key.split('-')[1]
+                sort_keys.update({
+                    key: {
+                        'order': AggsOrder.desc.value,
+                    }
+                })
+                continue
+            else:
+                sort_keys.update({
+                    key: {
+                        'order': AggsOrder.asc.value,
+                    }
+                })
+        return _format
 
 
 class QueryType(IntEnum):
@@ -265,7 +286,11 @@ class EsQ(object):
         return _qs
 
     def highlight(self, *args):
-        self._query.update(EsFormat.highlight_format(args))
+        self._query.update(EsFormat.highlight_format(*args))
+        return self
+
+    def order_by(self, *args):
+        self._query.update(EsFormat.sort_format(*args))
         return self
 
     def aggs(self, aggs_key: str, **kwargs):
