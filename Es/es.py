@@ -128,9 +128,10 @@ class QueryType(IntEnum):
 class Aggs(object):
     def __init__(
             self, agg_field: str, agg_type: str = AggsType.terms.value,
-            bucket: str='keys', order: str=AggsOrder.count.value, isdesc: bool=True, iskeyword: bool=True,
+            bucket: str='keys', order: str=AggsOrder.count.value, isdesc: bool=True, iskeyword: bool=False,
             size: Optional[int]=None,
-            script: Optional[str]=None):
+            script: Optional[str]=None,
+            min_doc: Optional[int]=None):
         self._type = agg_type
         self.field: str = f'{agg_field}.keyword' if iskeyword else agg_field
         self.bucket: str = bucket
@@ -140,6 +141,7 @@ class Aggs(object):
         self.size: Optional[int] = size
         self.script: Optional[str] = script
 
+        self.min_doc = min_doc
         self.child_aggs: Optional[Aggs] = None
 
     def parse(self):
@@ -151,15 +153,27 @@ class Aggs(object):
                 }
             }
         }
+
+        aggs_type: Dict[str, Any] = _aggs['aggs'][self.bucket][self._type]
         if self.script:
-            _aggs['aggs'][self.bucket][self._type].update({'script': self.script})
+            aggs_type.update({
+                'script': self.script,
+            })
         if self.field:
-            _aggs['aggs'][self.bucket][self._type].update({'field': self.field})
+            aggs_type.update({
+                'field': self.field,
+            })
         if self.size:
-            _aggs['aggs'][self.bucket][self._type].update({'size': self.size})
+            aggs_type.update({
+                'size': self.size
+            })
         if self.order:
-            _aggs['aggs'][self.bucket][self._type].update({
+            aggs_type.update({
                 'order': {f'{self.order}': self.order_type}
+            })
+        if self.min_doc is not None:
+            aggs_type.update({
+                'min_doc_count': self.min_doc,
             })
 
         if self.child_aggs:
@@ -225,6 +239,7 @@ class EsQ(object):
         self._qs: Query = self._clone(q_type, *args, **kwargs)
         self._query: Dict[str, Any] = dict()
         self._resp: Dict[str, Any] = dict()
+        self._timeout: int = 10
 
         self._aggs: Optional[Aggs] = None
         self._last_aggs: Optional[Aggs] = None
@@ -298,7 +313,11 @@ class EsQ(object):
             self._aggs = Aggs(agg_field=aggs_key, **kwargs)
             self._last_aggs = self._aggs
         else:
-            agg = Aggs(agg_field=aggs_key, order=None, **kwargs)
+            if 'order' in kwargs:
+                order = kwargs.pop('order')
+            else:
+                order = None
+            agg = Aggs(agg_field=aggs_key, order=order, **kwargs)
             self._last_aggs.child_aggs = agg
             self._last_aggs = agg
         return self
@@ -308,7 +327,7 @@ class EsQ(object):
         return self
 
     def excute(self):
-        self._resp = self.using.search(index=self.index, body=self.query_dict)
+        self._resp = self.using.search(index=self.index, body=self.query_dict, request_timeout=self._timeout)
         return self._resp
 
     def clear(self):
@@ -316,6 +335,15 @@ class EsQ(object):
 
     def update(self, data: dict):
         self._query.update(data)
+
+    @property
+    def timemout(self):
+        return self._timeout
+
+    @timemout.setter
+    def timeout(self, value: int):
+        self._timeout = value
+        return value
 
     @property
     def count(self):
