@@ -34,6 +34,7 @@ class EmailTypes(IntEnum):
     BUG = auto()
     RECRUIT = auto()
     REGISTER = auto()
+    MODIFYPASS = auto()
 
 
 class FuncCallBack(IntEnum):
