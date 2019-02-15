@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" style="height:100%">
+
+<head>
+    <meta charset="UTF-8">
+    <title>任务提醒</title>
+</head>
+
+<body style="height:100%;margin:0;background-color:#F4F8F9;position:relative;font-smoothing:antialiased;-webkit-font-smoothing:antialiased;font-family:'PingFangSC-Regular','Microsoft Yahei','helvetica neue','hiragino sans gb','arial','microsoft yahei ui','microsoft yahei','simsun','sans-serif';">
+    <div class="main-container" style="height: 100%;
+			position: relative;">
+        <div class="center-box" style="padding: 30px;
+			width: 500px;
+			background: #fff;
+			box-shadow: 0 3px 8px #e6e8ec;
+			border-radius: 6px;">
+            <div class="top-tit" style="text-align: center;border-bottom: 1px solid #efefef;">
+                <!-- <span style="display: block;
+        			margin: auto;
+        			background-color: #4EE3C1;
+        			width: 42px;
+        			height: 42px;
+        			border-radius: 50%;">
+                            <img style="display: inline-block;
+        			width: 30px;
+        			height: 30px;
+        			margin-top: 6px;" src="http://118.31.165.166:12101/static/email/logo.png"
+                        alt="">
+                </span> -->
+                <img style="display: inline-block;
+                width: 42px;
+                height: 42px;
+                margin: auto;
+                " src="http://118.31.165.166:12101/static/email/logo-1.png"
+                        title="logo.png" alt="logo.png">
+                <span class="line" style="display: block;margin: auto;background-color: #4EE3C1;margin-top: 10px;
+			height: 4px;
+			width: 40px;
+			border-radius: 0;">
+                </span>
+                <h2 style="margin: 20px 0;
+			color: #3d464d;
+			font-size: 20px;">青塔</h2>
+            </div>
+            <div class="content">
+                <h3 style="margin: 30px 0 20px;">
+                    亲爱的
+                    <span style="color: #55debf;">
+                        {{ realname }}
+                    </span>
+                    ，你好！
+                </h3>
+                <p style="margin: 5px 0;
+        			font-size: 15px;
+        			color: #606266;">青塔已经收到你的找回密码请求，请点击
+                    <a style="font-size: 14px;
+                    display: inline-block;
+                    color:#4fbcff"
+                        href="{{ url }}">
+                        此链接重置密码
+                    </a>
+                </p>
+                <p style="margin: 5px 0;
+                    font-size: 13.5px;
+                    color: #606266;
+                    margin-bottom:20px;">（本链接将在半小时后失效）</p>
+                <p style="margin: 5px 0;
+			font-size: 15px;
+			color: #606266;">
+                    如果按钮无法点击，请点击或复制一下链接到浏览器地址栏打开：
+                    <a style="cursor: pointer;
+			color: #4fbcff;" href="{{ url }}">
+                        {{ url }}
+                    </a>
+                </p>
+            </div>
+            <div class="bot-tit" style="margin-top: 100px;
+			border-top: 1px solid #efefef;">
+                <p style="font-size: 14px;
+			color: #bfbfbf;
+			text-align: center;
+			margin: 20px 0 0;">
+                    本邮件由系统自动发送，请勿回复
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
