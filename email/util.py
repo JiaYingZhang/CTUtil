@@ -1,4 +1,4 @@
-from typing import Dict, Union, List, Type
+from typing import Dict, Union, List, Type, Set
 import os
 from jinja2 import Environment, select_autoescape, FileSystemLoader
 from CTUtil.types import EmailTypes
@@ -7,6 +7,20 @@ _BASE_FILE = os.path.dirname(os.path.abspath(__file__))
 env = Environment(
     loader=FileSystemLoader(os.path.join(_BASE_FILE, 'template')),
     auto_reload=select_autoescape(['html', 'xml']))
+
+
+class ProcessEmail(type):
+    manage: set = set()
+
+    def __new__(cls, clsname, bases, clsdict):
+        _type = type(clsname, bases, clsdict)
+        cls.manage.add(_type)
+        return _type
+
+
+class BaseEmail(metaclass=ProcessEmail):
+    template: str = ''
+    work_dir: str = os.getcwd()
 
 
 class CingTaEmail(object):
@@ -25,7 +39,7 @@ class CingTaEmail(object):
         self.msg: str = msg if msg else ''
 
         self.to_email: List[str] = to_email
-        self._html_model: Type[EmailTypes] = model
+        self._html_model: Union[EmailTypes, BaseEmail] = model
         self.title = title
         self.kwargs: Dict[str, str] = kwargs
 
@@ -48,19 +62,26 @@ class CingTaEmail(object):
         html_text = self.kwargs.setdefault('html_string', '')
         if html_text:
             return html_text
-        template = env.get_template(self._set_model_template).render(**self.kwargs)
+        if isinstance(self._html_model, EmailTypes):
+            template = env.get_template(self._set_model_template).render(**self.kwargs)
+            return template
+        _env = Environment(
+            loader=FileSystemLoader(os.path.join(self._html_model.work_dir, 'template')),
+            auto_reload=select_autoescape(['html', 'xml']))
+        template = _env.get_template(self._html_model.template).render(**self.kwargs)
         return template
 
     @property
     def _set_model_template(self) -> str:
-        email_type_mapping_template: Dict[Type[EmailTypes], str] = {
+        email_type_mapping_template: Dict[EmailTypes, str] = {
             EmailTypes.DEMAND: 'email_need.html',
             EmailTypes.BUG: 'email_bug.html',
             EmailTypes.RECRUIT: 'email_zhaoping.html',
             EmailTypes.REGISTER: 'email_register.html',
             EmailTypes.MODIFYPASS: 'email_modifypass.html',
         }
-        if self._html_model not in email_type_mapping_template.keys():
+        email_type_mapping_template.update(ProcessEmail.manage)
+        if self._html_model not in email_type_mapping_template:
             raise ValueError('not this html model')
         template: str = email_type_mapping_template.setdefault(self._html_model)
         return template

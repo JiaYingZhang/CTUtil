@@ -1,8 +1,11 @@
-from CTUtil.email.util import CingTaEmail
+from CTUtil.email.util import CingTaEmail, BaseEmail
 from django.core.mail import send_mail
 from typing import List, Union, Type
 from traceback import print_exc
 from CTUtil.types import EmailTypes, FuncCallBack
+
+__all__ = ('CingTaEmail', 'BaseEmail', 'send_mail', 'EmailTypes',
+           'FuncCallBack')
 
 
 def send_cingta_email(
@@ -12,7 +15,7 @@ def send_cingta_email(
         msg: Union[None, str]=None,
         from_email_name: str='cingta',
         **kwargs) -> Type[FuncCallBack]:
-    mail: Email = CingTaEmail(title, to_email, model, msg, from_email_name, **kwargs)
+    mail: CingTaEmail = CingTaEmail(title, to_email, model, msg, from_email_name, **kwargs)
     try:
         send_mail(**mail.email_msg)
         return FuncCallBack.SUCCESS
