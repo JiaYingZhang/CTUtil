@@ -20,5 +20,4 @@ def send_cingta_email(
         send_mail(**mail.email_msg)
         return FuncCallBack.SUCCESS
     except BaseException as e:
-        print_exc()
-        return FuncCallBack.FAIL
+        raise e

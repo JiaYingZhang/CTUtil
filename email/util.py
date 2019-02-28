@@ -80,7 +80,6 @@ class CingTaEmail(object):
             EmailTypes.REGISTER: 'email_register.html',
             EmailTypes.MODIFYPASS: 'email_modifypass.html',
         }
-        email_type_mapping_template.update(ProcessEmail.manage)
         if self._html_model not in email_type_mapping_template:
             raise ValueError('not this html model')
         template: str = email_type_mapping_template.setdefault(self._html_model)
