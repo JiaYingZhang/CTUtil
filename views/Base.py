@@ -20,13 +20,14 @@ class RequestCtrlMethods(Enum):
 
 class BaseViewMeta(type):
     def __new__(cls, clsname, bases, clsdict: Dict[str, Any]):
-        must_argv: List[str] = ['model_name', 'route_name']
-        for argv in must_argv:
-            if bases and not clsdict.setdefault(argv, None):
-                raise ValueError('Views must be model_name and route_name')
-        route_name: str = clsdict.setdefault('route_name', None)
-        if route_name:
-            clsdict['route_name'] = f'{route_name}/' if not route_name.endswith('/') else route_name
+        if clsdict.setdefault('abstract', False) is False:
+            must_argv: List[str] = ['model_name', 'route_name']
+            for argv in must_argv:
+                if bases and not clsdict.setdefault(argv, None):
+                    raise ValueError('Views must be model_name and route_name')
+            route_name: str = clsdict.setdefault('route_name', None)
+            if route_name:
+                clsdict['route_name'] = f'{route_name}/' if not route_name.endswith('/') else route_name
         return super().__new__(cls, clsname, bases, clsdict)
 
 
@@ -34,6 +35,7 @@ class BaseView(metaclass=BaseViewMeta):
 
     model_name = None
     route_name = None
+    abstract = True
     process_request = []
 
     def __init__(self, **kwargs):
@@ -56,7 +58,7 @@ class BaseView(metaclass=BaseViewMeta):
         return resp_to_json(return_data)
 
     def delete(self, request: HttpRequest) -> HttpResponse:
-        reqall: Dict[str, str] = request.POST
+        reqall: Dict[str, str] = self.process_request_post(request)
         _id: int = int(reqall.get('id', 0))
         if not _id:
             return resp_error_json('id不允许为空')
