@@ -1,7 +1,6 @@
 from CTUtil.email.util import CingTaEmail, BaseEmail
 from django.core.mail import send_mail
 from typing import List, Union, Type
-from traceback import print_exc
 from CTUtil.types import EmailTypes, FuncCallBack
 
 __all__ = ('CingTaEmail', 'BaseEmail', 'send_mail', 'EmailTypes',

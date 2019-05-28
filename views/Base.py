@@ -1,21 +1,8 @@
 from django.http import HttpRequest, HttpResponse
 from CTUtil.Response.response import resp_error_json, resp_to_json
-from typing import Dict, Union, Type, Any, List
+from typing import Dict, Union, Any, List
 from django.conf.urls import url
-from enum import Enum, auto
-
-
-class RequestCtrlMethods(Enum):
-    delete = auto()
-    add = auto()
-    update = auto()
-    query = auto()
-
-    def __str__(self):
-        return self.name
-
-    def __unicode__(self):
-        return self.__str__()
+import inspect
 
 
 class BaseViewMeta(type):
@@ -37,10 +24,33 @@ class BaseView(metaclass=BaseViewMeta):
     route_name = None
     abstract = True
     process_request = []
+    page_key = 'pageNo'
+    size_key = 'pageSize'
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    @property
+    def reqall(self) -> dict:
+        if getattr(self, '_reqall', None) is None:
+            self._reqall = self.process_request_post(self.request)
+        return self._reqall
+
+    @property
+    def page(self):
+        if getattr(self, '_page', None) is None:
+            self._page = int(self.reqall.setdefault(self.page_key, 1))
+        return self._page
+
+    @property
+    def size(self):
+        if getattr(self, '_size', None) is None:
+            _size = int(self.reqall.setdefault(self.size_key, 20))
+            if _size > 40:
+                _size = 40
+            self._size = _size
+        return self._size
 
     def process_request_post(
             self, request: HttpRequest) -> Dict[str, Union[str, int]]:
@@ -100,22 +110,26 @@ class BaseView(metaclass=BaseViewMeta):
         return resp_to_json(return_data)
 
     @classmethod
-    def as_view(cls, _method: Type[RequestCtrlMethods], **init):
-        def view(request: HttpRequest, *args, **kwargs):
+    def as_views(cls, method_name: str, **init):
+        def view(reqeust: HttpRequest, *args, **kwargs):
+            init['request'] = reqeust
             self = cls(**init)
-            return self.dispatch(_method, request, *args, **kwargs)
+            return self.dispatch(method_name, reqeust, *args, **kwargs)
         return view
 
-    def dispatch(self, _method: Type[RequestCtrlMethods], request, *args, **kwargs):
-        handle = getattr(self, _method.name)
+    def dispatch(self, method_name: str, request, *args, **kwargs):
+        handle = getattr(self, method_name)
         for func in self.process_request:
             handle = func(handle)
         return handle(request, *args, **kwargs)
 
     @classmethod
     def as_urls(cls, django_url_list):
-        for control_method in RequestCtrlMethods:
-            path = '{method_name}-{route_name}'.format(
-                method_name=control_method,
-                route_name=cls.route_name, )
-            django_url_list.append(url(path, cls.as_view(control_method)))
+        for k, v in cls.__dict__.items():
+            if inspect.isfunction(v):
+                sig: inspect.Signature = inspect.signature(v)
+                if 'request' in sig.parameters and (
+                    str(sig.return_annotation) == str(HttpResponse) or sig.return_annotation == sig.empty
+                ):
+                    path = f'{k}-{cls.route_name}'
+                    django_url_list.append(url(path, cls.as_views(k)))
