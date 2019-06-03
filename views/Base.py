@@ -1,8 +1,17 @@
 from django.http import HttpRequest, HttpResponse
 from CTUtil.Response.response import resp_error_json, resp_to_json
 from typing import Dict, Union, Any, List
+from functools import wraps
 from django.conf.urls import url
 import inspect
+
+
+def exclude(func):
+    @wraps(func)
+    def _exclude(*args, **kwargs):
+        return func(*args, **kwargs)
+    setattr(_exclude, 'view', False)
+    return _exclude
 
 
 class BaseViewMeta(type):
@@ -52,6 +61,7 @@ class BaseView(metaclass=BaseViewMeta):
             self._size = _size
         return self._size
 
+    @exclude
     def process_request_post(
             self, request: HttpRequest) -> Dict[str, Union[str, int]]:
         data = request.POST.copy()
@@ -127,9 +137,12 @@ class BaseView(metaclass=BaseViewMeta):
     def as_urls(cls, django_url_list):
         for k, v in cls.__dict__.items():
             if inspect.isfunction(v):
+                if not getattr(v, 'view', True):
+                    continue
                 sig: inspect.Signature = inspect.signature(v)
                 if 'request' in sig.parameters and (
                     str(sig.return_annotation) == str(HttpResponse) or sig.return_annotation == sig.empty
                 ):
-                    path = f'{k}-{cls.route_name}'
+                    name: str = k.replace('_', '-')
+                    path = f'{name}-{cls.route_name}'
                     django_url_list.append(url(path, cls.as_views(k)))
