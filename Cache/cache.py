@@ -1,6 +1,6 @@
 from django.http import HttpResponse, HttpRequest
 from django.utils.deprecation import MiddlewareMixin
-from typing import Optional, Union, NewType, NamedTuple
+from typing import Optional, Union, NewType, NamedTuple, Any
 import redis
 import pickle
 import hashlib
@@ -16,7 +16,7 @@ expire: int = 60 * 60 * 24
 
 class RedisObject(NamedTuple):
     expire: float
-    value: bytes
+    value: Any
 
 try:
     config: dict = settings.Redis.setdefault('default', {})
@@ -27,12 +27,25 @@ RedisPool: redis.ConnectionPool = redis.ConnectionPool(
     host=config.setdefault('host', 'localhost'), port=config.setdefault('port', 6379))
 
 _using: redis.Redis = redis.Redis(connection_pool=RedisPool)
-Db: str = config.setdefault('name', 'default')
+_table: str = 'default'
+
+
+def get_using_config(key: str) -> redis.Redis:
+    try:
+        config: dict = settings.Redis.setdefault(key, {})
+        return redis.Redis(
+            host=config.setdefault('host', 'localhost'),
+            port=config.setdefault('port', 6379)
+        )
+    except:
+        raise TypeError(f'{key} not exists')
+
+    
 
 
 class Cache:
-    def __init__(self, using: Optional[redis.Redis]=None, table: Optional[str]=Db):
-        self.using = _using if not using else using
+    def __init__(self, using: Optional[str]=None, table: Optional[str]=Db):
+        self.using = _using if not using else get_using_config(using)
         self.table: str = table
 
     def add(self, key: str, value: Any, expire: Optional[int]=None):
@@ -79,7 +92,7 @@ class DjangoHttpMixin:
         )
 
     @classmethod
-    def cached_response(expire: Optional[int]=None, table: Optional[str]=None, cache: Optional[Cache]=None):
+    def cached_response(expire: Optional[int]=None, cache: Optional[Cache]=None):
         def _cached_response(func):
             @wraps(func)
             def _set_caches(request):
