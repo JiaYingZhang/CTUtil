@@ -140,9 +140,7 @@ class BaseView(metaclass=BaseViewMeta):
                 if not getattr(v, 'view', True):
                     continue
                 sig: inspect.Signature = inspect.signature(v)
-                if 'request' in sig.parameters and (
-                    str(sig.return_annotation) == str(HttpResponse) or sig.return_annotation == sig.empty
-                ):
+                if str(sig.return_annotation) == str(HttpResponse) or sig.return_annotation == sig.empty:
                     name: str = k.replace('_', '-')
                     path = f'{name}-{cls.route_name}'
                     django_url_list.append(url(path, cls.as_views(k)))
