@@ -31,41 +31,36 @@ Db: str = config.setdefault('name', 'default')
 
 
 class Cache:
-    def __init__(self, table: Optional[None], using: Optional[redis.Redis]=None):
+    def __init__(self, using: Optional[redis.Redis]=None, table: Optional[str]=Db):
         self.using = _using if not using else using
         self.table: str = table
 
-    def add(self, key: str, value: bytes, expire: Optional[int]=None):
+    def add(self, key: str, value: Any, expire: Optional[int]=None):
         key: MD5Str = self.get_md5_key(key)
         if not expire:
             expire: int = int(config.setdefault('expire', 60 * 60 * 24))
         o: RedisObject = RedisObject(expire=time.time() + expire, value=value)
         v: bytes = pickle.dumps(o)
-        self.using.hset(Db, key, v)
-        if self.table:
-            self.using.sadd(self.table, key)
+        self.using.hset(self.table, key, v)
 
     def delete(self, key: str):
         key: MD5Str = self.get_md5_key(key)
-        self.using.hdel(Db, key)
-        self.using.srem(self.table, key)
+        self.using.hdel(self.table, key)
 
-    def update(self, key: str, value: bytes, expire: Optional[int]=None):
+    def update(self, key: str, value: Any, expire: Optional[int]=None):
         return add(key, value, expire)
 
     def clear(self):
-        keys = self.using.smembers(self.table)
-        for key in keys:
-            self.using.hdel(Db, key)
+            self.using.delete(self.table)
     
-    def get(self, key: str) -> bytes:
+    def get(self, key: str) -> Any:
         key: MD5Str = self.get_md5_key(key)
-        v: bytes = self.using.hget(Db, key)
+        v: bytes = self.using.hget(self.table, key)
         if not v:
             return None
         o: RedisObject = pickle.loads(v)
         if time.time() > o.expire:
-            self.using.hdel(Db, key)
+            self.using.hdel(self.table, key)
             return None
         else:
             return o.value
@@ -73,13 +68,6 @@ class Cache:
     @classmethod
     def get_md5_key(cls, key: str) -> MD5Str:
         return hashlib.md5(key.encode()).hexdigest()
-
-    @classmethod
-    def delete_table_set(cls, table: str, using: Optional[redis.Redis]=None):
-        using: redis.Redis = using if using else _using
-        keys = using.smembers(table)
-        for key in keys:
-            using.hdel(Db, key)
 
 
 class DjangoHttpMixin:
