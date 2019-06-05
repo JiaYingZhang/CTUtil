@@ -18,6 +18,9 @@ class RedisObject(NamedTuple):
     expire: float
     value: Any
 
+    def is_expire(self):
+        return time.time() > self.expire
+
 try:
     config: dict = settings.Redis.setdefault('default', {})
 except:
@@ -40,11 +43,9 @@ def get_using_config(key: str) -> redis.Redis:
     except:
         raise TypeError(f'{key} not exists')
 
-    
-
 
 class Cache:
-    def __init__(self, using: Optional[str]=None, table: Optional[str]=Db):
+    def __init__(self, using: Optional[str]=None, table: Optional[str]=_table):
         self.using = _using if not using else get_using_config(using)
         self.table: str = table
 
@@ -72,7 +73,7 @@ class Cache:
         if not v:
             return None
         o: RedisObject = pickle.loads(v)
-        if time.time() > o.expire:
+        if o.is_expire:
             self.using.hdel(self.table, key)
             return None
         else:
