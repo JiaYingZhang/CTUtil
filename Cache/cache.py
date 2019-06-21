@@ -10,16 +10,26 @@ from django.conf import settings
 from typing import NamedTuple
 import time
 import json
+from datetime import datetime
 
 MD5Str = NewType('MD5Str', str)
 expire: int = 60 * 60 * 24
+
 
 class RedisObject(NamedTuple):
     expire: float
     value: Any
 
+    @property
     def is_expire(self):
         return time.time() > self.expire
+
+    def __str__(self):
+        return json.dumps({
+            'expire': datetime.fromtimestamp(self.expire).isoformat(),
+            'is_expire': self.is_expire,
+        }, ensure_ascii=False)
+
 
 try:
     config: dict = settings.Redis.setdefault('default', {})
@@ -62,11 +72,11 @@ class Cache:
         self.using.hdel(self.table, key)
 
     def update(self, key: str, value: Any, expire: Optional[int]=None):
-        return add(key, value, expire)
+        return self.add(key, value, expire)
 
     def clear(self):
             self.using.delete(self.table)
-    
+
     def get(self, key: str) -> Any:
         key: MD5Str = self.get_md5_key(key)
         v: bytes = self.using.hget(self.table, key)
@@ -85,24 +95,28 @@ class Cache:
 
 
 class DjangoHttpMixin:
-    
-    @classmethod
-    def make_request_key(request: HttpRequest) -> str:
-        return request.path + json.dumps(request.POST.copy(), ensure_ascii=False) + json.dumps(
-            json.loads(request.body), ensure_ascii=False
-        )
 
     @classmethod
-    def cached_response(expire: Optional[int]=None, cache: Optional[Cache]=None):
+    def make_request_key(cls, request: HttpRequest) -> str:
+        base: str = request.path + json.dumps(request.POST.copy())
+        try:
+            d: str = json.dumps(json.loads(request.body), ensure_ascii=False)
+            return base + d
+        except:
+            return base
+
+    @classmethod
+    def cache_response(cls, cache: Optional[Cache]=None, expire: Optional[int]=None):
         def _cached_response(func):
             @wraps(func)
-            def _set_caches(request):
-                resp: HttpResponse = func(request)
+            def _set_caches(*args, **kwargs):
+                request: HttpRequest = args[-1]
+                resp: HttpResponse = func(*args, **kwargs)
                 try:
                     if resp.status_code == HTTPResponseStates.SUCCESS:
-                        cache = cache if cache else Cache()
-                        key: str = DjangoHttpMixin.make_request_key(request)
-                        cache.add(key, pickle.dumps(resp))
+                        c = cache if cache else Cache()
+                        key: str = cls.make_request_key(request)
+                        c.add(key, pickle.dumps(resp), expire=expire)
                 except:
                     pass
                 return resp
@@ -112,12 +126,12 @@ class DjangoHttpMixin:
 
 class CachesMiddleware(MiddlewareMixin):
 
-    cache: Cache = Cache()
+    Cache: Cache = Cache()
 
     def process_request(self, request):
         try:
             key: str = DjangoHttpMixin.make_request_key(request)
-            value = self.cache.get(request)
+            value = self.Cache.get(key)
             if value:
                 return pickle.loads(value)
         except:

@@ -1,4 +1,4 @@
 from CTUtil.middleware.exception import ProcessException
-from . import CachesMiddleware
+from CTUtil.Cache import CachesMiddleware
 
 __all__ = ('CachesMiddleware', 'ProcessException')

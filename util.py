@@ -4,8 +4,8 @@ import os
 import logging
 import re
 import base64
-from typing import Dict, Type, Callable, Union, Any, List, Iterable
-from datetime import datetime, date
+from typing import Dict, Type, Callable, Union, Any, List, Iterable, Tuple
+from datetime import datetime, date, time
 from urllib.parse import quote
 import requests
 from traceback import print_exc
@@ -14,6 +14,7 @@ from Crypto.Cipher import AES
 from CTUtil.types import DateSec
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from django.conf.urls import RegexURLPattern
+from django.http import HttpRequest
 import random
 
 try:
@@ -28,6 +29,19 @@ logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
+
+
+def get_client_ip(request: HttpRequest):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+def get_date_range(date: date) -> Tuple[datetime, datetime]:
+    return datetime.combine(date, time.min), datetime.combine(date, time.max)
 
 
 def queryset_paging(queryset: Iterable[Any], page: int, page_size: int):
