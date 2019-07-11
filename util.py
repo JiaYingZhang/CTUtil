@@ -121,7 +121,7 @@ def process_files_return_pathlist(request, files_dir: str='image'):
     myFiles = request.FILES
     data_list = []
     if myFiles:
-        for myFile in myFiles.itervalues():
+        for myFile in myFiles.values():
             file_type = (myFile.name).split(".")[-1]
             file_path = set_default_file_path(file_type=file_type)
             with open(file_path, 'wb+') as f:

@@ -98,10 +98,12 @@ class BaseView(metaclass=BaseViewMeta):
         if not _id:
             return resp_error_json('id不允许为空')
         reqall.pop('id')
-        query = self.model_name.objects.filter(id=_id)
-        if not query:
+        obj = self.model_name.objects.filter(id=_id).first()
+        if not obj:
             return resp_error_json('数据不存在')
-        query.update(**reqall)
+        for key, value in reqall.items():
+            setattr(obj, key, value)
+        obj.save()
         return_data: Dict[str, Union[str, int]] = {
             'state': 0,
             'data': '修改成功',
