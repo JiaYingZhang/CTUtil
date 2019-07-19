@@ -16,6 +16,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from django.conf.urls import RegexURLPattern
 from django.http import HttpRequest
 import random
+import yaml
 
 try:
     from aliyunsdkcore.client import AcsClient
@@ -25,10 +26,19 @@ except:
     print_exc()
 
 
-logger = logging.getLogger()
-logger.setLevel(logging.ERROR)
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
+config_dir: str = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'config'
+)
+
+
+def set_global_logging(logging_config_file: str) -> None:
+    if not logging_config_file:
+        logging_config_file: str = os.path.join(config_dir, 'logging.yaml')
+    with open(logging_config_file, 'r') as f:
+        config = yaml.load(f)
+        logging.config.dictConfig(config)
 
 
 def get_client_ip(request: HttpRequest):

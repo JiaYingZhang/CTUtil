@@ -4,15 +4,12 @@ from CTUtil.Response import resp_error_json
 from CTUtil.types import HTTPResponseStates
 from traceback import print_exc
 from io import StringIO
-from CTUtil.util import logger, logger_formatter
+from CTUtil.util import logger_formatter, set_global_logging
 import logging
 
-__all__ = ['ProcessException']
-file = 'error.log'
 
-file_log_handle = logging.FileHandler(file)
-file_log_handle.setFormatter(logger_formatter)
-logger.addHandler(file_log_handle)
+__all__ = ['ProcessException']
+set_global_logging()
 
 
 class ProcessException(MiddlewareMixin):
@@ -28,7 +25,7 @@ class ProcessException(MiddlewareMixin):
         print_exc(file=fp)
         msg = fp.getvalue()
         fp.close()
-        logger.error(format_logging_msg(request.path, msg))
+        logging.error(format_logging_msg(request.path, msg))
         resp: HttpResponse = resp_error_json('系统错误')
         resp.status_code = HTTPResponseStates.ERROR
         return resp
