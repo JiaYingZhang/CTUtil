@@ -22,7 +22,10 @@ class RedisObject(NamedTuple):
 
     @property
     def is_expire(self):
-        return time.time() > self.expire
+        if self.expire:
+            return time.time() > self.expire
+        else:
+            return False
 
     def __str__(self):
         return json.dumps({
@@ -55,15 +58,21 @@ def get_using_config(key: str) -> redis.Redis:
 
 
 class Cache:
-    def __init__(self, using: Optional[str]=None, table: Optional[str]=_table):
+    def __init__(self, using: Optional[str]=None, table: Optional[str]=_table, is_never_expire=False):
         self.using = _using if not using else get_using_config(using)
         self.table: str = table
+        self.is_never_expire: bool = is_never_expire
 
     def add(self, key: str, value: Any, expire: Optional[int]=None):
         key: MD5Str = self.get_md5_key(key)
         if not expire:
-            expire: int = int(config.setdefault('expire', 60 * 60 * 24))
-        o: RedisObject = RedisObject(expire=time.time() + expire, value=value)
+            if self.is_never_expire:
+                expire_time: Union[float, None] = None
+            else:
+                expire_time = time.time() + int(config.setdefault('expire', 60 * 60 *24))
+        else:
+            expire_time = time.time() + expire
+        o: RedisObject = RedisObject(expire=expire_time, value=value)
         v: bytes = pickle.dumps(o)
         self.using.hset(self.table, key, v)
 
@@ -88,6 +97,11 @@ class Cache:
             return None
         else:
             return o.value
+
+    def __len__(self) -> int:
+        if getattr(self, '_length', None) is None:
+            self._length: int = self.using.hlen(self.table)
+        return self._length
 
     @classmethod
     def get_md5_key(cls, key: str) -> MD5Str:
