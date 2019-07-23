@@ -34,6 +34,7 @@ config_dir: str = os.path.join(
 
 
 def set_global_logging(logging_config_file: str=None) -> None:
+    import logging.config
     if not logging_config_file:
         logging_config_file: str = os.path.join(config_dir, 'logging.yaml')
     with open(logging_config_file, 'r') as f:
