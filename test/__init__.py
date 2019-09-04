@@ -1,0 +1,1 @@
+from CTUtil.test.core import CingtaTest

@@ -1,10 +1,12 @@
 from typing import Callable, Any, Optional, Tuple, Dict, Type
 from CTUtil.util import jstimestamp_to_datetime
+from django.db import models
 
 __all__ = ['Field', 'CharField', 'IntField', 'JsTimeStampField', 'Form']
 
 
 class Field(object):
+
     def __init__(
             self,
             backend: str,
@@ -19,6 +21,7 @@ class Field(object):
 
 
 class CharField(Field):
+
     def valid(self, value):
         value, err = super().valid(str(value))
         if err != '':
@@ -27,6 +30,7 @@ class CharField(Field):
 
 
 class IntField(Field):
+
     def valid(self, value):
         value, err = super().valid(int(value))
         if err != '':
@@ -35,6 +39,7 @@ class IntField(Field):
 
 
 class JsTimeStampField(Field):
+
     def valid(self, value):
         value, err = super().valid(value)
         if err != '':
@@ -42,7 +47,23 @@ class JsTimeStampField(Field):
         return jstimestamp_to_datetime(int(value)), err
 
 
+class ModelField(Field):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model: Type[model] = kwargs.setdefualt('model', None)
+
+    def valid(self, value):
+        if not self.model:
+            raise ValueError('ModelField must be model arg')
+        value, err = super().valid(value)
+        if err != '':
+            return value, err
+        return self.model.objects.get(pk=value)
+
+
 class FormMeta(type):
+
     def __new__(cls, clsname: str, bases: Tuple[object],
                 clsdict: Dict[str, Any]):
         fields: Dict[str, Field] = {}
@@ -56,6 +77,7 @@ class FormMeta(type):
 
 
 class Form(metaclass=FormMeta):
+
     def __init__(self, data: Dict[str, Any]):
         self.data = data
         self.error: Dict[str, str] = {}
