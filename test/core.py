@@ -6,7 +6,8 @@ import yaml
 
 class CingtaTest(TestCase):
 
-    def load_test_data(self, file_name: str) -> Any:
+    @classmethod
+    def load_test_data(cls, file_name: str) -> Any:
         with open(file_name, 'r', encoding='utf8') as f:
             data: str = f.read()
         if file_name.endswith('json'):
