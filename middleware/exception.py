@@ -4,12 +4,10 @@ from CTUtil.Response import resp_error_json
 from CTUtil.types import HTTPResponseStates
 from traceback import print_exc
 from io import StringIO
-from CTUtil.util import logger_formatter, set_global_logging
 import logging
 
 
 __all__ = ['ProcessException']
-set_global_logging()
 
 
 class ProcessException(MiddlewareMixin):
