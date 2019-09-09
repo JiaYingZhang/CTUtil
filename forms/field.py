@@ -116,7 +116,7 @@ class Form(metaclass=FormMeta):
         if not isinstance(self.data, dict):
             self.data = self.data.__dict__
         for name, value in self.data.items():
-            field: Type[Field] = self.fields.setdefault(name)
+            field: Type[Field] = self.fields.get(name, None)
             if not field or field.ignore:
                 continue
             value, err = field.valid(value)
@@ -132,7 +132,7 @@ class Form(metaclass=FormMeta):
         if getattr(self, '_front', None) is None:
             self._front = {}
 
-            _getattr = (lambda : self.data.setdefault \
+            _getattr = (lambda : self.data.get \
                 if isinstance(self.data, dict) else lambda name, default: getattr(self.data, name, default)) ()
             for front, field in self.fields.items():
                 value = _getattr(field.backend, None)
