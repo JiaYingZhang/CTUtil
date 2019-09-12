@@ -136,17 +136,3 @@ class DjangoHttpMixin:
                 return resp
             return _set_caches
         return _cached_response
-
-
-class CachesMiddleware(MiddlewareMixin):
-
-    Cache: Cache = Cache()
-
-    def process_request(self, request):
-        try:
-            key: str = DjangoHttpMixin.make_request_key(request)
-            value = self.Cache.get(key)
-            if value:
-                return pickle.loads(value)
-        except:
-            return
