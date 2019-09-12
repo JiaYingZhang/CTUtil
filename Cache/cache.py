@@ -84,7 +84,7 @@ class Cache:
         return self.add(key, value, expire)
 
     def clear(self):
-            self.using.delete(self.table)
+        self.using.delete(self.table)
 
     def get(self, key: str) -> Any:
         key: MD5Str = self.get_md5_key(key)
@@ -128,7 +128,7 @@ class DjangoHttpMixin:
                 resp: HttpResponse = func(*args, **kwargs)
                 try:
                     if resp.status_code == HTTPResponseStates.SUCCESS:
-                        c = cache if cache else Cache()
+                        c = cache if cache is not None else Cache()
                         key: str = cls.make_request_key(request)
                         c.add(key, pickle.dumps(resp), expire=expire)
                 except:
