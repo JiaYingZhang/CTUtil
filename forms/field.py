@@ -77,7 +77,11 @@ class ModelField(Field):
         value, err = super().valid(value)
         if err != '':
             return value, err
-        return self.model.objects.get(pk=value), err
+        try:
+            ins = self.model.objects.get(pk=value)
+        except:
+            ins = None
+        return ins, err
 
 
 class FormMeta(type):
@@ -88,7 +92,10 @@ class FormMeta(type):
         for base in bases:
             _fields = getattr(base, 'fields', {})
             if _fields:
-                clsdict.update(_fields)
+                for key, value in _fields.items():
+                    if key in clsdict:
+                        continue
+                    clsdict[key] = value
         for key, filed in clsdict.items():
             if isinstance(filed, Field):
                 fields[key] = filed
