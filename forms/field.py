@@ -142,7 +142,10 @@ class Form(metaclass=FormMeta):
             _getattr = (lambda : self.data.get \
                 if isinstance(self.data, dict) else lambda name, default: getattr(self.data, name, default)) ()
             for front, field in self.fields.items():
-                value = _getattr(field.backend, None)
+                try:
+                    value = _getattr(field.backend, None)
+                except:
+                    value = None
                 if field._display:
                     self._front[front] = field._display(value)
                 else:
