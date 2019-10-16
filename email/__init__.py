@@ -9,7 +9,7 @@ __all__ = ('CingTaEmail', 'BaseEmail', 'send_mail', 'EmailTemplate'
 
 def send_cingta_email(title: str,
                       to_email: List[str],
-                      model: Type[EmailTemplateEmailTemplate],
+                      model: Type[EmailTemplate],
                       msg: Union[None, str] = None,
                       from_email_name: str = 'cingta',
                       **kwargs) -> Type[FuncCallBack]:

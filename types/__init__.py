@@ -29,14 +29,6 @@ class HTTPResponseStates(IntEnum):
     FORBIDDEN = 403
 
 
-class EmailTypes(IntEnum):
-    DEMAND = auto()
-    BUG = auto()
-    RECRUIT = auto()
-    REGISTER = auto()
-    MODIFYPASS = auto()
-
-
 class FuncCallBack(IntEnum):
     FAIL = 0
     SUCCESS = 1
