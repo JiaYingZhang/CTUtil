@@ -25,21 +25,28 @@ try:
 except:
     print_exc()
 
-
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
-config_dir: str = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'config'
-)
+config_dir: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               'config')
 
 
-def set_global_logging(logging_config_file: str=None) -> None:
+def set_global_logging(
+        logging_file: str = None,
+        logging_level: int = logging.INFO,
+        logging_config_file: Union[str, 'default', None] = None) -> None:
     import logging.config
     if not logging_config_file:
-        logging_config_file: str = os.path.join(config_dir, 'logging.yaml')
-    with open(logging_config_file, 'r') as f:
-        config = yaml.load(f)
-        logging.config.dictConfig(config)
+        config = dict(level=logging_level, format=logger_formatter)
+        if logging_file:
+            config.update(filename=logging_file)
+        logging.basicConfig(**config)
+    else:
+        if logging_config_file == 'default':
+            logging_config_file: str = os.path.join(config_dir, 'logging.yaml')
+        with open(logging_config_file, 'r') as f:
+            config = yaml.load(f)
+            logging.config.dictConfig(config)
 
 
 def get_client_ip(request: HttpRequest):
@@ -56,7 +63,7 @@ def get_date_range(date: date) -> Tuple[datetime, datetime]:
 
 
 def queryset_paging(queryset: Iterable[Any], page: int, page_size: int):
-    return queryset[(page - 1) * page_size: page * page_size]
+    return queryset[(page - 1) * page_size:page * page_size]
 
 
 def jstimestamp_to_datetime(jstimestamp: int):
@@ -78,14 +85,15 @@ def get_django_all_url(urlpatterns: List[Any]):
     return urls
 
 
-def set_default_file_path(files_dir: str='image',
-                          file_type: str='jpeg') -> str:
+def set_default_file_path(files_dir: str = 'image',
+                          file_type: str = 'jpeg') -> str:
     _date: Type[date] = datetime.now().date()
     dir_path = os.path.join('static', files_dir, format(_date, '%Y%m%d'))
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-    filename = '{file_name}.{file_type}'.format(
-        file_name=str(uuid.uuid4()).replace('-', ''), file_type=file_type)
+    filename = '{file_name}.{file_type}'.format(file_name=str(
+        uuid.uuid4()).replace('-', ''),
+                                                file_type=file_type)
     path = os.path.join(dir_path, filename)
     return path
 
@@ -103,19 +111,19 @@ def process_base64_in_content(post: dict) -> None:
     file_path = set_default_file_path(file_type=image_type)
     with open(file_path, 'wb') as f:
         f.write(image_decode)
-    content = content.replace(
-        search_base64.group(), '\"{path}\"'.format(path=file_path))
+    content = content.replace(search_base64.group(),
+                              '\"{path}\"'.format(path=file_path))
     post['content'] = content
 
 
-def make_code(count: int=4) -> str:
+def make_code(count: int = 4) -> str:
     data = [str(random.randint(0, 9)) for i in range(count)]
     return ''.join(data)
 
 
 def process_file_return_path(request,
-                             files_name: str='file',
-                             files_dir: str='image'):
+                             files_name: str = 'file',
+                             files_dir: str = 'image'):
     myFile = request.FILES.get(files_name)
     if not myFile:
         return
@@ -128,7 +136,7 @@ def process_file_return_path(request,
         return file_path.replace('\\', '/')
 
 
-def process_files_return_pathlist(request, files_dir: str='image'):
+def process_files_return_pathlist(request, files_dir: str = 'image'):
     myFiles = request.FILES
     data_list = []
     if myFiles:
@@ -144,7 +152,7 @@ def process_files_return_pathlist(request, files_dir: str='image'):
 
 class TokenSerializer(object):
 
-    def __init__(self, salt: str, overtime_sec: Type[DateSec]=DateSec.DAY):
+    def __init__(self, salt: str, overtime_sec: Type[DateSec] = DateSec.DAY):
         self.s = Serializer(salt, expires_in=overtime_sec)
 
     def encode(self, data: Dict[str, Any]) -> bytes:
@@ -182,7 +190,10 @@ class SMS(object):
         self.template_code = template_code
 
     # 发送信息
-    def send_sms(self, phone: str, code: int, context: Union[None, Dict[str, Any]]=None):
+    def send_sms(self,
+                 phone: str,
+                 code: int,
+                 context: Union[None, Dict[str, Any]] = None):
         business_id = uuid.uuid1()
         smsRequest = SendSmsRequest.SendSmsRequest()
         smsRequest.set_TemplateCode(self.template_code)
@@ -192,7 +203,8 @@ class SMS(object):
         smsRequest.set_SignName(self.sign_name)
         smsRequest.set_PhoneNumbers(phone)
 
-        smsResponse: bytes = self.acs_client.do_action_with_exception(smsRequest)
+        smsResponse: bytes = self.acs_client.do_action_with_exception(
+            smsRequest)
         return json.loads(smsResponse)
 
     def __unicode__(self):
@@ -211,14 +223,16 @@ class WxLogin(object):
         return 'https://open.weixin.qq.com/connect/qrconnect?appid={APPID}&redirect_uri={redirrect_uri}&response_type=code&scope={scope}&state=STATE#wechat_redirect'.format(
             APPID=self.appid,
             redirrect_uri=self.redirect_url,
-            scope='snsapi_login', )
+            scope='snsapi_login',
+        )
 
     # 获取open_id
     def get_access_token(self, code):
         url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid={APPID}&secret={APPSECRET}&code={CODE}&grant_type=authorization_code'.format(
             APPID=self.appid,
             APPSECRET=self.secret,
-            CODE=code, )
+            CODE=code,
+        )
         resp = requests.get(url).json()
         return resp
 
@@ -227,7 +241,8 @@ class WxLogin(object):
     def get_unionid(token, openid):
         url = 'https://api.weixin.qq.com/sns/userinfo?access_token={token}&openid={openid}'.format(
             token=token,
-            openid=openid, )
+            openid=openid,
+        )
         resp = requests.get(url).json()
         return resp.get('unionid')
 
@@ -266,7 +281,8 @@ class WxMiniInterface(object):
         url = 'https://api.weixin.qq.com/sns/jscode2session?appid={AppID}&secret={AppSecret}&js_code={code}&grant_type=authorization_code'.format(
             AppID=self.APPID,
             AppSecret=self.APPSECRET,
-            code=code, )
+            code=code,
+        )
         resp = requests.get(url).json()
         return resp
 
@@ -285,13 +301,14 @@ class WxMiniInterface(object):
 
         token_url: str = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={APPID}&secret={APPSECRET}'.format(
             APPID=self.APPID,
-            APPSECRET=self.APPSECRET, )
+            APPSECRET=self.APPSECRET,
+        )
         token: Dict[str, str] = requests.get(token_url).json()
         if token.get('errcode'):
             raise TypeError('error APPID or error APPSECRET')
         _token = token.get('access_token', '')
         template_url: str = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token={ACCESS_TOKEN}'.format(
             ACCESS_TOKEN=_token, )
-        resp = requests.post(
-            template_url, data=json.dumps(templatedata)).json()
+        resp = requests.post(template_url,
+                             data=json.dumps(templatedata)).json()
         return resp
