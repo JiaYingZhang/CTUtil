@@ -37,7 +37,11 @@ def set_global_logging(
         logging_config_file: Union[str, 'default', None] = None) -> None:
     import logging.config
     if not logging_config_file:
-        config = dict(level=logging_level, format=logger_formatter)
+        config = dict(
+            level=logging_level,
+            format=
+            "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
+        )
         if logging_file:
             config.update(filename=logging_file)
         logging.basicConfig(**config)
