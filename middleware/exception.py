@@ -1,6 +1,6 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.http import HttpRequest, HttpResponse
-from CTUtil.Response import resp_error_json
+from CTUtil.response import resp_error_json
 from CTUtil.types import HTTPResponseStates
 from traceback import print_exc
 from io import StringIO
