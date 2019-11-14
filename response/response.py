@@ -1,6 +1,5 @@
 from django.http import HttpResponse
 from CTUtil.types import ResponseStates
-from CTUtil.Parse import DjangoSerializer
 from typing import Dict, Any, Type, Union
 import json
 
@@ -8,7 +7,7 @@ import json
 def resp_to_json(data: Dict[str, Any], token=None) -> HttpResponse:
     if not isinstance(data, dict):
         raise TypeError('data must be a dict')
-    resp = HttpResponse(json.dumps(data, cls=DjangoSerializer), content_type='application/json')
+    resp = HttpResponse(json.dumps(data), content_type='application/json')
     resp['Access-Control-Allow-Headers'] = '*'
     resp['Access-Control-Allow-Origin'] = '*'
     resp['Access-Control-Allow-Credentials'] = True
