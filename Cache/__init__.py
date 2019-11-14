@@ -1,3 +1,3 @@
-from CTUtil.Cache.cache import Cache, DjangoHttpMixin
+from CTUtil.cache.cache import Cache, DjangoHttpMixin
 
 __all__ = ('Cache', 'DjangoHttpMixin')
