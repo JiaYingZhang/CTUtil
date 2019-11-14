@@ -31,10 +31,9 @@ config_dir: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                'config')
 
 
-def set_global_logging(
-        logging_file: str = None,
-        logging_level: int = logging.INFO,
-        logging_config_file: Union[str, 'default', None] = None) -> None:
+def set_global_logging(logging_file: str = None,
+                       logging_level: int = logging.INFO,
+                       logging_config_file: Union[str, None] = None) -> None:
     import logging.config
     if not logging_config_file:
         config = dict(
@@ -47,7 +46,7 @@ def set_global_logging(
         logging.basicConfig(**config)
     else:
         if logging_config_file == 'default':
-            logging_config_file: str = os.path.join(config_dir, 'logging.yaml')
+            logging_config_file = os.path.join(config_dir, 'logging.yaml')
         with open(logging_config_file, 'r') as f:
             config = yaml.load(f)
             logging.config.dictConfig(config)
@@ -118,11 +117,6 @@ def process_base64_in_content(post: dict) -> None:
     content = content.replace(search_base64.group(),
                               '\"{path}\"'.format(path=file_path))
     post['content'] = content
-
-
-def make_code(count: int = 4) -> str:
-    data = [str(random.randint(0, 9)) for i in range(count)]
-    return ''.join(data)
 
 
 def process_file_return_path(request,
@@ -221,14 +215,6 @@ class WxLogin(object):
         self.appid = APPID
         self.secret = APPSECRET
         self.redirect_url = quote('https://www.cingta.com/')
-
-    # 生成二维码url
-    def create_code_url(self):
-        return 'https://open.weixin.qq.com/connect/qrconnect?appid={APPID}&redirect_uri={redirrect_uri}&response_type=code&scope={scope}&state=STATE#wechat_redirect'.format(
-            APPID=self.appid,
-            redirrect_uri=self.redirect_url,
-            scope='snsapi_login',
-        )
 
     # 获取open_id
     def get_access_token(self, code):

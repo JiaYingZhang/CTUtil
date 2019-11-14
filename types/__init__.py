@@ -4,6 +4,7 @@ from typing import Type
 
 
 class EnumJsonEncode(JSONEncoder):
+
     def default(self, obj: Type[Enum]):
         if isinstance(obj, Enum):
             return obj.value
@@ -17,21 +18,11 @@ class ResponseStates(IntEnum):
     PERMISSION_ERROR = auto()
 
 
-class IsOrNot(IntEnum):
-    NOT = 0
-    IS = 1
-
-
 class HTTPResponseStates(IntEnum):
     SUCCESS = 200
     NOTFOUND = 400
     ERROR = 500
     FORBIDDEN = 403
-
-
-class FuncCallBack(IntEnum):
-    FAIL = 0
-    SUCCESS = 1
 
 
 class DateSec(IntEnum):
