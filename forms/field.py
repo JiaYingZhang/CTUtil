@@ -22,7 +22,7 @@ Form.to_forn(backend_data) => data
 class Field(object):
 
     def __init__(self,
-                 backend: str,
+                 backend: str = None,
                  ignore: bool = False,
                  valid_func: Optional[Callable[[Any], Tuple[Any, str]]] = None,
                  display: Optional[Callable[[Any], Any]] = None):
@@ -86,7 +86,7 @@ class ModelField(Field):
 
 class FormMeta(type):
 
-    def __new__(cls, clsname: str, bases: Tuple[object],
+    def __new__(cls, clsname: str, bases: Tuple[type],
                 clsdict: Dict[str, Any]):
         fields: Dict[str, Field] = {}
         for base in bases:
@@ -103,6 +103,11 @@ class FormMeta(type):
             if key in clsdict:
                 del clsdict[key]
         clsdict['fields'] = fields
+        meta: object = clsdict.setdefault('Meta', None)
+        if meta:
+            model: object = getattr(meta, 'model', None)
+            if model:
+                fields: list = model.get
 
         return super().__new__(cls, clsname, bases, clsdict)
 
@@ -123,7 +128,7 @@ class Form(metaclass=FormMeta):
         if not isinstance(self.data, dict):
             self.data = self.data.__dict__
         for name, value in self.data.items():
-            field: Type[Field] = self.fields.get(name, None)
+            field: Field = self.fields.get(name, None)
             if not field or field.ignore:
                 continue
             value, err = field.valid(value)
@@ -135,9 +140,9 @@ class Form(metaclass=FormMeta):
         return isvalid
 
     @property
-    def front(self) -> bool:
+    def front(self) -> dict:
         if getattr(self, '_front', None) is None:
-            self._front = {}
+            self._front: dict = {}
 
             _getattr = (lambda : self.data.get \
                 if isinstance(self.data, dict) else lambda name, default: getattr(self.data, name, default)) ()

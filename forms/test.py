@@ -8,7 +8,19 @@ class TestForm(Form):
     id = IntField('id')
     univ = CharField('univ', minlength(3))
 
-t = TestForm({'datetime': '1565659297000', 'name': '12345', 'id': '1', 'univ': '12'})
+
+t = TestForm({
+    'datetime': '1565659297000',
+    'name': '12345',
+    'id': '1',
+    'univ': '12'
+})
 t.is_valid()
 print(t.error)
 print(t.backend)
+
+
+class TestMeta(Form):
+
+    class Meta:
+        fields = ('*')
