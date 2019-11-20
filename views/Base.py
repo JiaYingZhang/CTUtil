@@ -1,5 +1,5 @@
 from django.http import HttpRequest, HttpResponse
-from CTUtil.Response.response import resp_error_json, resp_to_json
+from CTUtil.response import resp_error_json, resp_to_json
 from typing import Dict, Union, Any, List
 from functools import wraps
 from django.conf.urls import url
