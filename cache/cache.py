@@ -6,7 +6,6 @@ import pickle
 import hashlib
 from functools import wraps
 from CTUtil.types import HTTPResponseStates
-from django.conf import settings
 from typing import NamedTuple
 import time
 import json
@@ -17,7 +16,7 @@ expire: int = 60 * 60 * 24
 
 
 class RedisObject(NamedTuple):
-    expire: float
+    expire: Optional[float]
     value: Any
 
     @property
@@ -28,66 +27,55 @@ class RedisObject(NamedTuple):
             return False
 
     def __str__(self):
-        return json.dumps({
-            'expire': datetime.fromtimestamp(self.expire).isoformat(),
-            'is_expire': self.is_expire,
-        }, ensure_ascii=False)
+        return json.dumps(
+            {
+                'expire': datetime.fromtimestamp(self.expire).isoformat(),
+                'is_expire': self.is_expire,
+            },
+            ensure_ascii=False)
 
 
-try:
-    config: dict = settings.Redis.setdefault('default', {})
-except:
-    config = {}
-
-RedisPool: redis.ConnectionPool = redis.ConnectionPool(
-    host=config.setdefault('host', 'localhost'), port=config.setdefault('port', 6379))
+RedisPool: redis.ConnectionPool = redis.ConnectionPool()
 
 _using: redis.Redis = redis.Redis(connection_pool=RedisPool)
 _table: str = 'default'
 
 
-def get_using_config(key: str) -> redis.Redis:
-    try:
-        config: dict = settings.Redis.setdefault(key, {})
-        return redis.Redis(
-            host=config.setdefault('host', 'localhost'),
-            port=config.setdefault('port', 6379)
-        )
-    except:
-        raise TypeError(f'{key} not exists')
-
-
 class Cache:
-    def __init__(self, using: Optional[str]=None, table: Optional[str]=_table, is_never_expire=False):
-        self.using = _using if not using else get_using_config(using)
-        self.table: str = table
+
+    def __init__(self,
+                 using: Optional[redis.Redis] = None,
+                 table: Optional[str] = _table,
+                 is_never_expire=False):
+        self.using = _using if not using else using
+        self.table: Optional[str] = table
         self.is_never_expire: bool = is_never_expire
 
-    def add(self, key: str, value: Any, expire: Optional[int]=None):
-        key: MD5Str = self.get_md5_key(key)
+    def add(self, key: MD5Str, value: Any, expire: Optional[int] = None):
+        key = self.get_md5_key(key)
         if not expire:
             if self.is_never_expire:
                 expire_time: Union[float, None] = None
             else:
-                expire_time = time.time() + int(config.setdefault('expire', 60 * 60 *24))
+                expire_time = time.time() + 60 * 60 * 24
         else:
             expire_time = time.time() + expire
         o: RedisObject = RedisObject(expire=expire_time, value=value)
         v: bytes = pickle.dumps(o)
         self.using.hset(self.table, key, v)
 
-    def delete(self, key: str):
-        key: MD5Str = self.get_md5_key(key)
+    def delete(self, key: MD5Str):
+        key = self.get_md5_key(key)
         self.using.hdel(self.table, key)
 
-    def update(self, key: str, value: Any, expire: Optional[int]=None):
+    def update(self, key: MD5Str, value: Any, expire: Optional[int] = None):
         return self.add(key, value, expire)
 
     def clear(self):
         self.using.delete(self.table)
 
-    def get(self, key: str) -> Any:
-        key: MD5Str = self.get_md5_key(key)
+    def get(self, key: MD5Str) -> Any:
+        key = self.get_md5_key(key)
         v: bytes = self.using.hget(self.table, key)
         if not v:
             return None
@@ -105,7 +93,7 @@ class Cache:
 
     @classmethod
     def get_md5_key(cls, key: str) -> MD5Str:
-        return hashlib.md5(key.encode()).hexdigest()
+        return MD5Str(hashlib.md5(key.encode()).hexdigest())
 
 
 class DjangoHttpMixin:
@@ -120,8 +108,12 @@ class DjangoHttpMixin:
             return base
 
     @classmethod
-    def cache_response(cls, cache: Optional[Cache]=None, expire: Optional[int]=None):
+    def cache_response(cls,
+                       cache: Optional[Cache] = None,
+                       expire: Optional[int] = None):
+
         def _cached_response(func):
+
             @wraps(func)
             def _set_caches(*args, **kwargs):
                 request: HttpRequest = args[-1]
@@ -134,5 +126,7 @@ class DjangoHttpMixin:
                 except:
                     pass
                 return resp
+
             return _set_caches
+
         return _cached_response
