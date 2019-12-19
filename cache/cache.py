@@ -51,7 +51,7 @@ class Cache:
         self.table: Optional[str] = table
         self.is_never_expire: bool = is_never_expire
 
-    def add(self, key: MD5Str, value: Any, expire: Optional[int] = None):
+    def add(self, key: str, value: Any, expire: Optional[int] = None):
         key = self.get_md5_key(key)
         if not expire:
             if self.is_never_expire:
@@ -64,17 +64,17 @@ class Cache:
         v: bytes = pickle.dumps(o)
         self.using.hset(self.table, key, v)
 
-    def delete(self, key: MD5Str):
+    def delete(self, key: str):
         key = self.get_md5_key(key)
         self.using.hdel(self.table, key)
 
-    def update(self, key: MD5Str, value: Any, expire: Optional[int] = None):
+    def update(self, key: str, value: Any, expire: Optional[int] = None):
         return self.add(key, value, expire)
 
     def clear(self):
         self.using.delete(self.table)
 
-    def get(self, key: MD5Str) -> Any:
+    def get(self, key: str) -> Any:
         key = self.get_md5_key(key)
         v: bytes = self.using.hget(self.table, key)
         if not v:
