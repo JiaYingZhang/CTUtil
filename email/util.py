@@ -1,4 +1,4 @@
-from typing import Dict, Union, List, Type, Set
+from typing import Dict, Union, List, Type, Set, Optional
 import os
 from jinja2 import Environment, select_autoescape, FileSystemLoader
 
@@ -15,6 +15,7 @@ class ProcessEmail(type):
 class BaseEmail(metaclass=ProcessEmail):
     template: str = ''
     work_dir: str = os.getcwd()
+    template_dir: Optional[str] = None
 
 
 class EmailTemplate(BaseEmail):
@@ -41,7 +42,7 @@ class CingTaEmail(object):
         self.msg: str = msg if msg else ''
 
         self.to_email: List[str] = to_email
-        self._html_model: Type[EmailTemplate] = model
+        self._html_model: Optional[Type[EmailTemplate]] = model
         self.title = title
         self.kwargs: Dict[str, str] = kwargs
 
@@ -50,7 +51,7 @@ class CingTaEmail(object):
         return text
 
     @property
-    def email_msg(self) -> Dict[str, str]:
+    def email_msg(self) -> dict:
         data = {
             'subject': self.title,
             'message': self._make_email_text(),
@@ -67,8 +68,13 @@ class CingTaEmail(object):
             html_text = self.kwargs.setdefault('html_string', '')
             return html_text
         elif self._html_model:
-            _env = Environment(loader=FileSystemLoader(
-                os.path.join(self._html_model.work_dir, 'template')),
+            loader_dir = [
+                os.path.join(self._html_model.work_dir, 'template'),
+                os.path.join(self._html_model.work_dir, 'templates'),
+            ]
+            if self._html_model.template_dir:
+                loader_dir.append(self._html_model.template_dir)
+            _env = Environment(loader=FileSystemLoader(loader_dir),
                                auto_reload=select_autoescape(['html', 'xml']))
             template = _env.get_template(
                 self._html_model.template).render(**self.kwargs)
