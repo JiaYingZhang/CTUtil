@@ -65,7 +65,7 @@ class BaseView(metaclass=BaseViewMeta):
                 self._ins = None
             else:
                 self._ins = self.model.objects.filter(pk=pk).first()
-            return self._ins
+        return self._ins
 
 
     @property
