@@ -1,6 +1,6 @@
 from django.http import HttpRequest, HttpResponse
 from CTUtil.response import resp_error_json, resp_to_json
-from typing import Dict, Union, Any, List
+from typing import Dict, Union, Any, List, Optional
 from functools import wraps
 from django.conf.urls import url
 import inspect
@@ -17,13 +17,21 @@ def exclude(func):
 class BaseViewMeta(type):
     def __new__(cls, clsname, bases, clsdict: Dict[str, Any]):
         if clsdict.setdefault('abstract', False) is False:
-            must_argv: List[str] = ['model_name', 'route_name']
-            for argv in must_argv:
-                if bases and not clsdict.setdefault(argv, None):
-                    raise ValueError('Views must be model_name and route_name')
-            route_name: str = clsdict.setdefault('route_name', None)
-            if route_name:
-                clsdict['route_name'] = f'{route_name}/' if not route_name.endswith('/') else route_name
+            router_key = ['route_name', 'router_name', 'router']
+            model_key = ['model_name', 'model']
+
+            for k in router_key:
+                router = clsdict.get(k, None)
+                if router:
+                    break
+            for k in model_key:
+                model = clsdict.get(k, None)
+                if model:
+                    break
+        
+            if bases and not all([model, router]):
+                raise ValueError('Views must be model and router')
+            clsdict['router'] = f'{router}/' if not router.endswith('/') else router
         return super().__new__(cls, clsname, bases, clsdict)
 
 
