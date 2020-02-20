@@ -104,11 +104,6 @@ class FormMeta(type):
             if key in clsdict:
                 del clsdict[key]
         clsdict['fields'] = fields
-        meta: object = clsdict.setdefault('Meta', None)
-        if meta:
-            model: object = getattr(meta, 'model', None)
-            if model:
-                fields: list = model.get
 
         return super().__new__(cls, clsname, bases, clsdict)
 

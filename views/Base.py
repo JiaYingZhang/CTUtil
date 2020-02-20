@@ -45,6 +45,7 @@ class BaseView(metaclass=BaseViewMeta):
     page_key = 'pageNo'
     size_key = 'pageSize'
     page_max_size = 40
+    pk_key = 'id'
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -55,6 +56,17 @@ class BaseView(metaclass=BaseViewMeta):
         if getattr(self, '_reqall', None) is None:
             self._reqall = self.process_request_post(self.request)
         return self._reqall
+
+    @property
+    def ins(self):
+        if getattr(self, '_ins', False) is False:
+            pk = self.reqall.setdefault(self.pk_key)
+            if not pk:
+                self._ins = None
+            else:
+                self._ins = self.model.objects.filter(pk=pk).first()
+            return self._ins
+
 
     @property
     def page(self):
