@@ -31,6 +31,7 @@ class BaseViewMeta(type):
         
             if bases and not all([model, router]):
                 raise ValueError('Views must be model and router')
+            clsdict['model'] = model
             clsdict['router'] = f'{router}/' if not router.endswith('/') else router
         return super().__new__(cls, clsname, bases, clsdict)
 
@@ -43,6 +44,7 @@ class BaseView(metaclass=BaseViewMeta):
     process_request = []
     page_key = 'pageNo'
     size_key = 'pageSize'
+    page_max_size = 40
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -57,16 +59,33 @@ class BaseView(metaclass=BaseViewMeta):
     @property
     def page(self):
         if getattr(self, '_page', None) is None:
-            self._page = int(self.reqall.setdefault(self.page_key, 1))
+            page: Union[str, int] = self.reqall.get(self.page_key, 1)
+            if isinstance(page, str):
+                if page.isdigit():
+                    self._page = int(page)
+                else:
+                    self._page = 1
+            elif isinstance(page, int):
+                self._page = page
+            else:
+                self._page = 1
         return self._page
 
     @property
     def size(self):
         if getattr(self, '_size', None) is None:
-            _size = int(self.reqall.setdefault(self.size_key, 20))
-            if _size > 40:
-                _size = 40
-            self._size = _size
+            size: Union[str, int] = self.reqall.get(self.size_key, self.page_max_size)
+            if isinstance(size, str):
+                if size.isdigit():
+                    self._size = int(size)
+                else:
+                    self._size = self.page_max_size
+            elif isinstance(size, int):
+                self._size = size
+            else:
+                self._size = self.page_max_size
+            if self._size > self.page_max_size:
+                self._size = self.page_max_size
         return self._size
 
     @exclude
@@ -81,7 +100,7 @@ class BaseView(metaclass=BaseViewMeta):
     def query(self, request: HttpRequest) -> HttpResponse:
         return_data = {
             'state': 0,
-            'data': list(self.model_name.objects.all()),
+            'data': list(self.model.objects.all()),
         }
         return resp_to_json(return_data)
 
@@ -90,7 +109,7 @@ class BaseView(metaclass=BaseViewMeta):
         _id: int = int(reqall.get('id', 0))
         if not _id:
             return resp_error_json('id不允许为空')
-        query = self.model_name.objects.filter(id=_id)
+        query = self.model.objects.filter(id=_id)
         if not query:
             return resp_error_json('数据不存在')
         query.delete()
@@ -106,7 +125,7 @@ class BaseView(metaclass=BaseViewMeta):
         if not _id:
             return resp_error_json('id不允许为空')
         reqall.pop('id')
-        obj = self.model_name.objects.filter(id=_id).first()
+        obj = self.model.objects.filter(id=_id).first()
         if not obj:
             return resp_error_json('数据不存在')
         for key, value in reqall.items():
@@ -122,7 +141,7 @@ class BaseView(metaclass=BaseViewMeta):
         reqall: Dict[str, Union[str, int]] = self.process_request_post(request)
         if 'id' in reqall:
             del reqall['id']
-        self.model_name.objects.create(**reqall)
+        self.model.objects.create(**reqall)
         return_data: Dict[str, Union[str, int]] = {
             'state': 0,
             'data': '新增成功',
