@@ -32,7 +32,7 @@ class BaseViewMeta(type):
             if bases and not all([model, router]):
                 raise ValueError('Views must be model and router')
         clsdict['model'] = model
-        clsdict['router'] = f'{router}/' if not router.endswith('/') else router
+        clsdict['router'] = f'{router}/' if router and not router.endswith('/') else router
         return super().__new__(cls, clsname, bases, clsdict)
 
 
