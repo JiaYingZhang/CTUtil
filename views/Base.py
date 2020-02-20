@@ -16,23 +16,23 @@ def exclude(func):
 
 class BaseViewMeta(type):
     def __new__(cls, clsname, bases, clsdict: Dict[str, Any]):
-        if clsdict.setdefault('abstract', False) is False:
-            router_key = ['route_name', 'router_name', 'router']
-            model_key = ['model_name', 'model']
+        router_key = ['route_name', 'router_name', 'router']
+        model_key = ['model_name', 'model']
 
-            for k in router_key:
-                router = clsdict.get(k, None)
-                if router:
-                    break
-            for k in model_key:
-                model = clsdict.get(k, None)
-                if model:
-                    break
-        
+        for k in router_key:
+            router = clsdict.get(k, None)
+            if router:
+                break
+        for k in model_key:
+            model = clsdict.get(k, None)
+            if model:
+                break
+
+        if clsdict.setdefault('abstract', False) is False:
             if bases and not all([model, router]):
                 raise ValueError('Views must be model and router')
-            clsdict['model'] = model
-            clsdict['router'] = f'{router}/' if not router.endswith('/') else router
+        clsdict['model'] = model
+        clsdict['router'] = f'{router}/' if not router.endswith('/') else router
         return super().__new__(cls, clsname, bases, clsdict)
 
 
