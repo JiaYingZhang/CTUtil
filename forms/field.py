@@ -110,8 +110,9 @@ class FormMeta(type):
 
 class Form(metaclass=FormMeta):
 
-    def __init__(self, data: Union[Dict[str, Any], Type[models.Model]],
-                 model: Optional[Type[models.Model]]):
+    def __init__(self,
+                 data: Union[Dict[str, Any], Type[models.Model]],
+                 model: Optional[Type[models.Model]] = None):
         self.data = data
         self.model = model
         self.error: Dict[str, str] = {}
