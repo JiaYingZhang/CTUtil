@@ -172,7 +172,7 @@ class Form(metaclass=FormMeta):
                 ins = self.model.objects.filter(**{pk_key: pk}).first()
                 if not ins:
                     return None
-                for key, value in data:
+                for key, value in data.items():
                     setattr(ins, key, value)
                 ins.save()
                 return ins
