@@ -1,6 +1,7 @@
 from typing import Callable, Any, Optional, Tuple, Dict, Type, Union
 from CTUtil.util import jstimestamp_to_datetime
 from django.db import models
+from copy import deepcopy
 
 __all__ = ['Field', 'CharField', 'IntField', 'JsTimeStampField', 'Form']
 """
@@ -114,8 +115,10 @@ class FormMeta(type):
 
 class Form(metaclass=FormMeta):
 
-    def __init__(self, data: Union[Dict[str, Any], Type[models.Model]]):
+    def __init__(self, data: Union[Dict[str, Any], Type[models.Model]],
+                 model: Optional[Type[models.Model]]):
         self.data = data
+        self.model = model
         self.error: Dict[str, str] = {}
         self.backend: Dict[str, Any] = {}
 
@@ -156,3 +159,25 @@ class Form(metaclass=FormMeta):
                 else:
                     self._front[front] = value
         return self._front
+
+    def create_or_update(self, expand_data: Optional[dict] = None,
+                         pk_key='id'):
+        if not self.model:
+            raise TypeError('must model')
+        if self.is_valid():
+            pk: str = self.backend.pop(pk_key, '')
+            data = deepcopy(self.backend)
+            if expand_data:
+                data.update(expand_data)
+            if not pk:
+                ins = self.model.objects.create(**data)
+                return ins
+            else:
+                ins = self.model.objects.filter(**{pk_key: pk}).first()
+                if not ins:
+                    return None
+                for key, value in data:
+                    setattr(ins, key, value)
+                ins.save()
+                return ins
+        raise ValueError(self.error)
