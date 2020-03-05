@@ -90,13 +90,11 @@ def get_django_all_url(urlpatterns: List[Any]):
 
 def set_default_file_path(files_dir: str = 'image',
                           file_type: str = 'jpeg') -> str:
-    _date: Type[date] = datetime.now().date()
+    _date: date = datetime.now().date()
     dir_path = os.path.join('static', files_dir, format(_date, '%Y%m%d'))
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-    filename = '{file_name}.{file_type}'.format(file_name=str(
-        uuid.uuid4()).replace('-', ''),
-                                                file_type=file_type)
+    filename = f'{str(uuid.uuid4()).replace("-", "")}.{file_type}'
     path = os.path.join(dir_path, filename)
     return path
 
@@ -121,17 +119,22 @@ def process_base64_in_content(post: dict) -> None:
 
 def process_file_return_path(request,
                              files_name: str = 'file',
-                             files_dir: str = 'image'):
-    myFile = request.FILES.get(files_name)
-    if not myFile:
+                             files_dir: str = 'image',
+                             return_name: bool = False):
+    _file = request.FILES.get(files_name)
+    if not _file:
         return
-    if myFile:
-        file_type = (myFile.name).split(".")[-1]
-        file_path = set_default_file_path(file_type=file_type)
-        with open(file_path, 'wb+') as f:
-            for chunk in myFile.chunks():
-                f.write(chunk)
-        return file_path.replace('\\', '/')
+    file_type = (_file.name).split(".")[-1]
+    file_path = set_default_file_path(file_type=file_type)
+    with open(file_path, 'wb+') as f:
+        for chunk in _file.chunks():
+            f.write(chunk)
+    path = file_path.replace('\\', '/')
+    if return_name:
+        return _file.name, path
+    else:
+        return path
+
 
 
 def process_files_return_pathlist(request, files_dir: str = 'image'):
@@ -150,13 +153,13 @@ def process_files_return_pathlist(request, files_dir: str = 'image'):
 
 class TokenSerializer(object):
 
-    def __init__(self, salt: str, overtime_sec: Type[DateSec] = DateSec.DAY):
+    def __init__(self, salt: str, overtime_sec: DateSec = DateSec.DAY):
         self.s = Serializer(salt, expires_in=overtime_sec)
 
-    def encode(self, data: Dict[str, Any]) -> bytes:
+    def encode(self, data: Any) -> bytes:
         return self.s.dumps(data)
 
-    def decode(self, data: bytes) -> Dict[str, Any]:
+    def decode(self, data: bytes) -> Any:
         return self.s.loads(data)
 
 
