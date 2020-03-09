@@ -177,6 +177,9 @@ class BaseView(metaclass=BaseViewMeta):
     @classmethod
     def as_urls(cls, django_url_list):
         for k, v in cls.__dict__.items():
+            k: str
+            if k.startswith('_', ):
+                continue
             if inspect.isfunction(v):
                 if not getattr(v, 'view', True):
                     continue
