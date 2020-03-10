@@ -125,7 +125,7 @@ def process_file_return_path(request,
     if not _file:
         return
     file_type = (_file.name).split(".")[-1]
-    file_path = set_default_file_path(file_type=file_type)
+    file_path = set_default_file_path(file_type=file_type, files_dir=files_dir)
     with open(file_path, 'wb+') as f:
         for chunk in _file.chunks():
             f.write(chunk)
