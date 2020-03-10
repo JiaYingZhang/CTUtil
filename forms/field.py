@@ -50,10 +50,12 @@ class CharField(Field):
 class IntField(Field):
 
     def valid(self, value):
-        value, err = super().valid(int(value))
+        value, err = super().valid(value)
         if err != '':
             return value, err
-        return value, err
+        if not value:
+            return value , err
+        return int(value), err
 
 
 class JsTimeStampField(Field):
@@ -61,6 +63,8 @@ class JsTimeStampField(Field):
     def valid(self, value):
         value, err = super().valid(value)
         if err != '':
+            return value, err
+        if not value:
             return value, err
         return jstimestamp_to_datetime(int(value)), err
 
