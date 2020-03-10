@@ -143,7 +143,7 @@ def process_files_return_pathlist(request, files_dir: str = 'image'):
     if myFiles:
         for myFile in myFiles.values():
             file_type = (myFile.name).split(".")[-1]
-            file_path = set_default_file_path(file_type=file_type)
+            file_path = set_default_file_path(file_type=file_type, files_dir=files_dir)
             with open(file_path, 'wb+') as f:
                 for chunk in myFile.chunks():
                     f.write(chunk)
