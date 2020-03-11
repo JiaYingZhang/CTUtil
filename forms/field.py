@@ -165,10 +165,10 @@ class Form(metaclass=FormMeta):
         if not self.model:
             raise TypeError('must model')
         if self.is_valid():
-            pk: str = self.backend.pop(pk_key, '')
             data = deepcopy(self.backend)
             if expand_data:
                 data.update(expand_data)
+            pk: str = data.pop(pk_key, '')
             if not pk:
                 ins = self.model.objects.create(**data)
                 return ins
