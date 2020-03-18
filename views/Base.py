@@ -4,7 +4,7 @@ from typing import Dict, Union, Any, List, Optional
 from functools import wraps
 from django.conf.urls import url
 import inspect
-from CTUtil.util import set_default_file_path, process_file_return_path()
+from CTUtil.util import set_default_file_path
 
 
 def exclude(func):
