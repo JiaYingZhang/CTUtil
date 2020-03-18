@@ -104,21 +104,32 @@ class BaseView(metaclass=BaseViewMeta):
     @exclude
     def process_request_post(
             self, request: HttpRequest) -> Dict[str, Union[str, int]]:
+        _data: Dict[str, Union[str, int]] = {}
+        _data.update(self.process_post_data(request))
+        _data.update(self._process_files(request))
+        return _data
+
+    @exclude
+    def process_post_data(self, request: HttpRequest) -> Dict[str, Union[str, int]]:
         data = request.POST.copy()
-        _data: Dict[str, str] = {}
+        _data: Dict[str, Union[str, int]] = {}
         for key in data:
             _data[key] = data.setdefault(key, '')
+        return _data
+
+    def _process_files(self, request: HttpRequest) -> Dict[str, str]:
+        _data = {}
         files = request.FILES.copy()
         for name, f in files.items():
             file_type = (f.name).split('.')[-1]
             file_path = set_default_file_path(file_type=file_type)
             if not file_path:
                 continue
-            with open(file_path, 'wb+') as f:
-                for chunk in f.chunks():
-                    f.write(chunk)
+            with open(file_path, 'wb+') as fp:
+                fp.write(f.read())
             _data[name] = file_path
         return _data
+
 
     def query(self, request: HttpRequest) -> HttpResponse:
         return_data = {
