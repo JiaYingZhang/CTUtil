@@ -54,7 +54,7 @@ class IntField(Field):
         if err != '':
             return value, err
         if not value:
-            return value , err
+            return value, err
         return int(value), err
 
 
@@ -160,8 +160,10 @@ class Form(metaclass=FormMeta):
                     self._front[front] = value
         return self._front
 
-    def create_or_update(self, expand_data: Optional[dict] = None,
-                         pk_key='id'):
+    def create_or_update(self,
+                         expand_data: Optional[dict] = None,
+                         pk_key='id',
+                         raise_error: bool = False):
         if not self.model:
             raise TypeError('must model')
         if self.is_valid():
@@ -180,4 +182,5 @@ class Form(metaclass=FormMeta):
                     setattr(ins, key, value)
                 ins.save()
                 return ins
-        raise ValueError(self.error)
+        if raise_error:
+            raise ValueError(self.error)
