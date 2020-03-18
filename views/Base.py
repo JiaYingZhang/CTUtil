@@ -106,7 +106,7 @@ class BaseView(metaclass=BaseViewMeta):
             self, request: HttpRequest) -> Dict[str, Union[str, int]]:
         _data: Dict[str, Union[str, int]] = {}
         _data.update(self.process_post_data(request))
-        _data.update(self._process_files(request))
+        # _data.update(self._process_files(request))
         return _data
 
     @exclude
