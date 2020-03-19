@@ -30,12 +30,15 @@ class Field(object):
         self.backend = backend
         self._valid_func = valid_func
         self.ignore = ignore
-        self._display = display
+        self._display = display or self.display
 
     def valid(self, value: Any) -> Tuple[Any, str]:
         if self._valid_func:
             return self._valid_func(value)
         return value, ''
+
+    def display(self, value: Any) -> Any:
+        return value
 
 
 class CharField(Field):
