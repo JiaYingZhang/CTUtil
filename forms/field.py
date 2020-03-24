@@ -49,6 +49,9 @@ class CharField(Field):
             return value, err
         return value, err
 
+    def display(self, value: Any) -> Any:
+        return str(value)
+
 
 class IntField(Field):
 
@@ -60,6 +63,9 @@ class IntField(Field):
             return value, err
         return int(value), err
 
+    def display(self, value: Any) -> Any:
+        return int(value)
+
 
 class JsTimeStampField(Field):
 
@@ -70,6 +76,48 @@ class JsTimeStampField(Field):
         if not value:
             return value, err
         return jstimestamp_to_datetime(int(value)), err
+
+    def display(self, value: Any) -> Any:
+        return value and format(value, '%Y-%m-%d %H:%M:%s')
+
+
+class OptionalDateField(Field):
+
+    def valid(self, value: Union[str, dict]):
+        if isinstance(value, dict):
+            value = self._parse_date(value)
+        return value, ''
+
+    def _parse_date(self, obj: dict):
+        d = f"{obj.get('year', '')}-{obj.get('month', '')}-{obj.get('day', '')}"
+
+        length = len(d)
+        end = length
+        for i in range(length - 1, -1, -1):
+            char = d[i]
+            if char.isdigit():
+                return d[:end]
+            else:
+                end -= 1
+        return ''
+
+    def display(self, value: str):
+        if not value:
+            return ''
+        date = value.split('-')
+        year, month, day = '', '', ''
+        for i in date:
+            if not year:
+                year = i
+            elif not month:
+                month = i
+            elif not day:
+                day = i
+        return {
+            'year': year,
+            'month': month,
+            'day': day,
+        }
 
 
 class ModelField(Field):
