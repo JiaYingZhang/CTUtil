@@ -50,6 +50,8 @@ class CharField(Field):
         return value, err
 
     def display(self, value: Any) -> Any:
+        if not value:
+            return ''
         return str(value)
 
 
@@ -122,9 +124,8 @@ class ObjectDateField(Field):
 
 class ModelField(Field):
 
-    def __init__(self, *args, **kwargs):
-        kwargs: dict
-        self.model: Type[model] = kwargs.pop('model', None)
+    def __init__(self, *args, **kwargs: Dict[str, Any]):
+        self.model: Type[models.Model] = kwargs.pop('model', None)
         super().__init__(*args, **kwargs)
 
     def valid(self, value):
