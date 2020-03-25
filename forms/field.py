@@ -139,7 +139,6 @@ class ModelField(Field):
             ins = None
         return ins, err
 
-
 class FormMeta(type):
 
     def __new__(cls, clsname: str, bases: Tuple[type],
