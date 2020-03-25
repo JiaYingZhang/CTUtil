@@ -44,7 +44,10 @@ class Field(object):
 class CharField(Field):
 
     def valid(self, value):
-        value, err = super().valid(str(value))
+        if not value:
+            return '', ''
+        else:
+            value, err = super().valid(str(value))
         if err != '':
             return value, err
         return value, err
