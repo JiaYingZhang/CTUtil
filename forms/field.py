@@ -81,7 +81,7 @@ class JsTimeStampField(Field):
         return value and format(value, '%Y-%m-%d %H:%M:%s')
 
 
-class OptionalDateField(Field):
+class ObjectDateField(Field):
 
     def valid(self, value: Union[str, dict]):
         if isinstance(value, dict):
