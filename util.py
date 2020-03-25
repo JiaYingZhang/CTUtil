@@ -123,6 +123,8 @@ def process_file_return_path(request,
                              return_name: bool = False):
     _file = request.FILES.get(files_name)
     if not _file:
+        if return_name:
+            return None, None
         return
     file_type = (_file.name).split(".")[-1]
     file_path = set_default_file_path(file_type=file_type, files_dir=files_dir)
