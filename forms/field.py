@@ -33,8 +33,6 @@ class Field(object):
         self._display = display or self.display
 
     def valid(self, value: Any) -> Tuple[Any, str]:
-        if self._valid_func:
-            return self._valid_func(value)
         return value, ''
 
     def display(self, value: Any) -> Any:
@@ -189,6 +187,8 @@ class Form(metaclass=FormMeta):
             if not field or field.ignore:
                 continue
             value, err = field.valid(value)
+            if field._valid_func:
+                value, err = field._valid_func(value)
             if err != '':
                 self.error[name] = err
                 isvalid = False
