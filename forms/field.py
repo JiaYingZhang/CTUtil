@@ -21,9 +21,8 @@ Form.to_forn(backend_data) => data
 
 
 class Field(object):
-
     def __init__(self,
-                 backend: str = None,
+                 backend: Optional[str] = None,
                  ignore: bool = False,
                  valid_func: Optional[Callable[[Any], Tuple[Any, str]]] = None,
                  display: Optional[Callable[[Any], Any]] = None):
@@ -40,7 +39,6 @@ class Field(object):
 
 
 class CharField(Field):
-
     def valid(self, value):
         if not value:
             return '', ''
@@ -57,7 +55,6 @@ class CharField(Field):
 
 
 class IntField(Field):
-
     def valid(self, value):
         value, err = super().valid(value)
         if err != '':
@@ -71,7 +68,6 @@ class IntField(Field):
 
 
 class JsTimeStampField(Field):
-
     def valid(self, value):
         value, err = super().valid(value)
         if err != '':
@@ -85,7 +81,6 @@ class JsTimeStampField(Field):
 
 
 class ObjectDateField(Field):
-
     def valid(self, value: Union[str, dict]):
         if isinstance(value, dict):
             value = self._parse_date(value)
@@ -124,7 +119,6 @@ class ObjectDateField(Field):
 
 
 class ModelField(Field):
-
     def __init__(self, *args, **kwargs: Dict[str, Any]):
         self.model: Type[models.Model] = kwargs.pop('model', None)
         super().__init__(*args, **kwargs)
@@ -141,11 +135,12 @@ class ModelField(Field):
             ins = None
         return ins, err
 
-class FormMeta(type):
 
-    def __new__(cls, clsname: str, bases: Tuple[type],
-                clsdict: Dict[str, Any]):
+class FormMeta(type):
+    def __new__(cls, clsname: str, bases: Tuple[type], clsdict: Dict[str,
+                                                                     Any]):
         fields: Dict[str, Field] = {}
+        field_mapping: Dict[str, Optional[str]] = {}
         for base in bases:
             _fields = getattr(base, 'fields', {})
             if _fields:
@@ -153,18 +148,25 @@ class FormMeta(type):
                     if key in clsdict:
                         continue
                     clsdict[key] = value
-        for key, filed in clsdict.items():
-            if isinstance(filed, Field):
-                fields[key] = filed
+        for key, field in clsdict.items():
+            if isinstance(field, Field):
+                fields[key] = field
         for key in fields.keys():
             if key in clsdict:
                 del clsdict[key]
+
+        for key, field in fields.items():
+            field_mapping[key] = field.backend
         clsdict['fields'] = fields
+        clsdict['field_mapping'] = field_mapping
 
         return super().__new__(cls, clsname, bases, clsdict)
 
 
 class Form(metaclass=FormMeta):
+
+    field_mapping: Dict[str, Optional[str]]
+    fields: Dict[str, Any]
 
     def __init__(self,
                  data: Union[Dict[str, Any], Type[models.Model]],
@@ -177,13 +179,12 @@ class Form(metaclass=FormMeta):
     def is_valid(self) -> bool:
         self.error.clear()
         self.backend.clear()
-        self.fields: dict
         isvalid: bool = True
 
         if not isinstance(self.data, dict):
             self.data = self.data.__dict__
         for name, value in self.data.items():
-            field: Field = self.fields.get(name, None)
+            field: Optional[Field] = self.fields.get(name, None)
             if not field or field.ignore:
                 continue
             value, err = field.valid(value)
@@ -193,7 +194,8 @@ class Form(metaclass=FormMeta):
                 self.error[name] = err
                 isvalid = False
             else:
-                self.backend[field.backend] = value
+                if field.backend:
+                    self.backend[field.backend] = value
         return isvalid
 
     @property
