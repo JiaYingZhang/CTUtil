@@ -119,7 +119,7 @@ class ObjectDateField(Field):
 
 
 class ModelField(Field):
-    def __init__(self, *args, **kwargs: Dict[str, Any]):
+    def __init__(self, *args, **kwargs):
         self.model: Type[models.Model] = kwargs.pop('model', None)
         super().__init__(*args, **kwargs)
 
