@@ -6,7 +6,6 @@ from traceback import print_exc
 from io import StringIO
 import logging
 
-
 __all__ = ['ProcessException']
 
 

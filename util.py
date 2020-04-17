@@ -4,7 +4,7 @@ import os
 import logging
 import re
 import base64
-from typing import Dict, Type, Callable, Union, Any, List, Iterable, Tuple
+from typing import Dict, Union, Any, List, Iterable, Tuple
 from datetime import datetime, date, time
 from urllib.parse import quote
 import requests

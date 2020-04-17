@@ -1,7 +1,9 @@
-from typing import Callable, Any, Optional, Tuple, Dict, Type, Union
-from CTUtil.util import jstimestamp_to_datetime
-from django.db import models
 from copy import deepcopy
+from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+
+from django.db import models
+
+from CTUtil.util import jstimestamp_to_datetime
 
 __all__ = ['Field', 'CharField', 'IntField', 'JsTimeStampField', 'Form']
 """
