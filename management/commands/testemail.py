@@ -1,3 +1,4 @@
+from CTUtil.email.util import EmailTemplate
 from django.core.management.base import BaseCommand
 from CTUtil.email import send_cingta_email, BaseEmail
 
@@ -10,7 +11,7 @@ def test_send_trd_model(email: str):
     send_cingta_email(title='测试', to_email=[email], model=SendTestEmail)
 
 
-class SendTestEmail(BaseEmail):
+class SendTestEmail(EmailTemplate):
     template: str = 'test.html'
 
 

@@ -1,6 +1,6 @@
 from CTUtil.email.util import CingTaEmail, BaseEmail, EmailTemplate
 from django.core.mail import send_mail
-from typing import List, Union, Type
+from typing import List, Optional, Union, Type
 
 __all__ = ('CingTaEmail', 'BaseEmail', 'send_mail', 'EmailTemplate'
            'FuncCallBack')
@@ -8,7 +8,7 @@ __all__ = ('CingTaEmail', 'BaseEmail', 'send_mail', 'EmailTemplate'
 
 def send_cingta_email(title: str,
                       to_email: List[str],
-                      model: Type[EmailTemplate],
+                      model: Optional[Type[EmailTemplate]] = None,
                       msg: Union[None, str] = None,
                       from_email_name: str = 'cingta',
                       **kwargs):

@@ -8,22 +8,13 @@ from typing import Dict, Union, Any, List, Iterable, Tuple
 from datetime import datetime, date, time
 from urllib.parse import quote
 import requests
-from traceback import print_exc
 
 from Crypto.Cipher import AES
 from CTUtil.types import DateSec
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from django.conf.urls import RegexURLPattern
 from django.http import HttpRequest
-import random
 import yaml
-
-try:
-    from aliyunsdkcore.client import AcsClient
-    from aliyunsdkcore.profile import region_provider
-    from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
-except:
-    print_exc()
 
 logger_formatter = logging.Formatter(
     "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
@@ -138,14 +129,14 @@ def process_file_return_path(request,
         return path
 
 
-
 def process_files_return_pathlist(request, files_dir: str = 'image'):
     myFiles = request.FILES
     data_list = []
     if myFiles:
         for myFile in myFiles.values():
             file_type = (myFile.name).split(".")[-1]
-            file_path = set_default_file_path(file_type=file_type, files_dir=files_dir)
+            file_path = set_default_file_path(file_type=file_type,
+                                              files_dir=files_dir)
             with open(file_path, 'wb+') as f:
                 for chunk in myFile.chunks():
                     f.write(chunk)
@@ -163,55 +154,6 @@ class TokenSerializer(object):
 
     def decode(self, data: bytes) -> Any:
         return self.s.loads(data)
-
-
-class SMS(object):
-    # 阿里云大于短信客户端接口
-    """
-        阿里大于接口返回
-        docstring here
-            return data: {
-                'RequestId': '请求id',
-                'Code': '状态码',
-                'Message': '状态码描述',
-                'BizId': '回执id',
-            }
-    """
-
-    REGION = "cn-hangzhou"
-    PRODUCT_NAME = "Dysmsapi"
-    DOMAIN = "dysmsapi.aliyuncs.com"
-
-    def __init__(self, ACCESS_KEY_ID, ACCESS_KEY_SECRET, sign_name,
-                 template_code):
-        self.acs_client = AcsClient(ACCESS_KEY_ID, ACCESS_KEY_SECRET,
-                                    self.REGION)
-        region_provider.add_endpoint(self.PRODUCT_NAME, self.REGION,
-                                     self.DOMAIN)
-
-        self.sign_name = sign_name
-        self.template_code = template_code
-
-    # 发送信息
-    def send_sms(self,
-                 phone: str,
-                 code: int,
-                 context: Union[None, Dict[str, Any]] = None):
-        business_id = uuid.uuid1()
-        smsRequest = SendSmsRequest.SendSmsRequest()
-        smsRequest.set_TemplateCode(self.template_code)
-        if context:
-            smsRequest.set_TemplateParam(json.dumps(context))
-        smsRequest.set_OutId(business_id)
-        smsRequest.set_SignName(self.sign_name)
-        smsRequest.set_PhoneNumbers(phone)
-
-        smsResponse: bytes = self.acs_client.do_action_with_exception(
-            smsRequest)
-        return json.loads(smsResponse)
-
-    def __unicode__(self):
-        return self.PRODUCT_NAME
 
 
 class WxLogin(object):
