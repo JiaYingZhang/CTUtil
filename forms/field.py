@@ -23,6 +23,7 @@ Form.to_forn(backend_data) => data
 
 
 class Field(object):
+
     def __init__(self,
                  backend: Optional[str] = None,
                  ignore: bool = False,
@@ -41,6 +42,7 @@ class Field(object):
 
 
 class CharField(Field):
+
     def valid(self, value):
         if not value:
             return '', ''
@@ -57,6 +59,7 @@ class CharField(Field):
 
 
 class IntField(Field):
+
     def valid(self, value):
         value, err = super().valid(value)
         if err != '':
@@ -70,6 +73,7 @@ class IntField(Field):
 
 
 class JsTimeStampField(Field):
+
     def valid(self, value):
         value, err = super().valid(value)
         if err != '':
@@ -83,6 +87,7 @@ class JsTimeStampField(Field):
 
 
 class ObjectDateField(Field):
+
     def valid(self, value: Union[str, dict]):
         if isinstance(value, dict):
             value = self._parse_date(value)
@@ -121,6 +126,7 @@ class ObjectDateField(Field):
 
 
 class ModelField(Field):
+
     def __init__(self, *args, **kwargs):
         self.model: Type[models.Model] = kwargs.pop('model', None)
         super().__init__(*args, **kwargs)
@@ -139,6 +145,7 @@ class ModelField(Field):
 
 
 class FormMeta(type):
+
     def __new__(cls, clsname: str, bases: Tuple[type], clsdict: Dict[str,
                                                                      Any]):
         fields: Dict[str, Field] = {}
@@ -205,8 +212,9 @@ class Form(metaclass=FormMeta):
         if getattr(self, '_front', None) is None:
             self._front: dict = {}
 
-            _getattr = (lambda : self.data.get \
-                if isinstance(self.data, dict) else lambda name, default: getattr(self.data, name, default)) ()
+            _getattr = (lambda: self.data.get
+                        if isinstance(self.data, dict) else lambda name,
+                        default: getattr(self.data, name, default))()
             for front, field in self.fields.items():
                 try:
                     value = _getattr(field.backend, None)
@@ -221,7 +229,7 @@ class Form(metaclass=FormMeta):
     def create_or_update(self,
                          expand_data: Optional[dict] = None,
                          pk_key='id',
-                         raise_error: bool = False):
+                         raise_error: bool = False) -> Any:
         if not self.model:
             raise TypeError('must model')
         if self.is_valid():

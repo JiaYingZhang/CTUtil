@@ -1,24 +1,29 @@
 from django.http import HttpRequest, HttpResponse
 from CTUtil.response import resp_error_json, resp_to_json
-from typing import Dict, Union, Any, List, Optional
+from typing import Dict, Type, Union, Any, List, Optional
 from functools import wraps
 from django.conf.urls import url
 import inspect
 from CTUtil.util import set_default_file_path
+from django.db import models
 
 
 def exclude(func):
+
     @wraps(func)
     def _exclude(*args, **kwargs):
         return func(*args, **kwargs)
+
     setattr(_exclude, 'view', False)
     return _exclude
 
 
 class BaseViewMeta(type):
+
     def __new__(cls, clsname, bases, clsdict: Dict[str, Any]):
         router_key = ['route_name', 'router_name', 'router']
         model_key = ['model_name', 'model']
+        router, model = None, None
 
         for k in router_key:
             router = clsdict.get(k, None)
@@ -33,7 +38,8 @@ class BaseViewMeta(type):
             if bases and not all([model, router]):
                 raise ValueError('Views must be model and router')
         clsdict['model'] = model
-        clsdict['router'] = f'{router}/' if router and not router.endswith('/') else router
+        clsdict['router'] = f'{router}/' if router and not router.endswith(
+            '/') else router
         return super().__new__(cls, clsname, bases, clsdict)
 
 
@@ -47,6 +53,10 @@ class BaseView(metaclass=BaseViewMeta):
     size_key = 'pageSize'
     page_max_size = 40
     pk_key = 'id'
+
+    model: Type[models.Model]
+    router: Optional[str]
+    request: HttpRequest
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -68,7 +78,6 @@ class BaseView(metaclass=BaseViewMeta):
                 self._ins = self.model.objects.filter(pk=pk).first()
         return self._ins
 
-
     @property
     def page(self):
         if getattr(self, '_page', None) is None:
@@ -87,7 +96,8 @@ class BaseView(metaclass=BaseViewMeta):
     @property
     def size(self):
         if getattr(self, '_size', None) is None:
-            size: Union[str, int] = self.reqall.get(self.size_key, self.page_max_size)
+            size: Union[str, int] = self.reqall.get(self.size_key,
+                                                    self.page_max_size)
             if isinstance(size, str):
                 if size.isdigit():
                     self._size = int(size)
@@ -110,7 +120,8 @@ class BaseView(metaclass=BaseViewMeta):
         return _data
 
     @exclude
-    def process_post_data(self, request: HttpRequest) -> Dict[str, Union[str, int]]:
+    def process_post_data(self,
+                          request: HttpRequest) -> Dict[str, Union[str, int]]:
         data = request.POST.copy()
         _data: Dict[str, Union[str, int]] = {}
         for key in data:
@@ -129,7 +140,6 @@ class BaseView(metaclass=BaseViewMeta):
                 fp.write(f.read())
             _data[name] = file_path
         return _data
-
 
     def query(self, request: HttpRequest) -> HttpResponse:
         return_data = {
@@ -184,10 +194,12 @@ class BaseView(metaclass=BaseViewMeta):
 
     @classmethod
     def as_views(cls, method_name: str, **init):
+
         def view(reqeust: HttpRequest, *args, **kwargs):
             init['request'] = reqeust
             self = cls(**init)
             return self.dispatch(method_name, reqeust, *args, **kwargs)
+
         return view
 
     def dispatch(self, method_name: str, request, *args, **kwargs):
@@ -206,7 +218,8 @@ class BaseView(metaclass=BaseViewMeta):
                 if not getattr(v, 'view', True):
                     continue
                 sig: inspect.Signature = inspect.signature(v)
-                if str(sig.return_annotation) == str(HttpResponse) or sig.return_annotation == sig.empty:
+                if str(sig.return_annotation) == str(
+                        HttpResponse) or sig.return_annotation == sig.empty:
                     name: str = k.replace('_', '-')
                     path = f'{name}-{cls.router}'
                     django_url_list.append(url(path, cls.as_views(k)))
