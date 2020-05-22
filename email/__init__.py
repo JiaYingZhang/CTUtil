@@ -24,7 +24,6 @@ def send_cingta_email(title: str,
         **kwargs,
     )
     try:
-        # send_mail(**mail.email_msg)
         mail.send()
         return None
     except Exception as e:

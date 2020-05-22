@@ -71,21 +71,6 @@ class CingTaEmail(object):
             to=to_email,
         )
 
-    # def _make_email_text(self) -> str:
-    #     text = """{msg}""".format(msg=self.msg)
-    #     return text
-
-    # @property
-    # def email_msg(self) -> dict:
-    #     data = {
-    #         'subject': self.title,
-    #         'message': self._make_email_text(),
-    #         'from_email': self.SENED_EMAIL,
-    #         'recipient_list': self.to_email,
-    #         'html_message': self._html_text(),
-    #     }
-    #     return data
-
     def get_html_text(self) -> str:
         if 'html' in self.kwargs:
             html_text = self.kwargs.setdefault('html_string', '')
@@ -99,6 +84,10 @@ class CingTaEmail(object):
         html_text = self.get_html_text()
         if html_text:
             self.email_message.attach_alternative(html_text, 'text/html')
+
+        # 当body为空并且有附件是情况下 不显示html
+        if self.attachments and not self.email_message.body:
+            self.email_message.body = 'https://www.cingta.com'
         for name, content in self.attachments:
             self.email_message.attach(name, content)
 

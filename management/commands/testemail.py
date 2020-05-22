@@ -34,7 +34,7 @@ class Command(BaseCommand):
                             action='store_true',
                             default=False)
         parser.add_argument('-m',
-                            dest='model',
+                            dest='nomal',
                             action='store_true',
                             default=False)
         parser.add_argument('-f',
@@ -50,4 +50,5 @@ class Command(BaseCommand):
             test_send_trd_model(name)
         if options.setdefault('attachment'):
             test_send_att_email(name)
-        send_cingta_email(name)
+        if options.setdefault('nomal'):
+            test_send_email(name)
