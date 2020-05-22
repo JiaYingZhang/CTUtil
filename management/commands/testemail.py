@@ -1,6 +1,7 @@
 from CTUtil.email.util import EmailTemplate
 from django.core.management.base import BaseCommand
 from CTUtil.email import send_cingta_email, BaseEmail
+import os
 
 
 def test_send_email(email: str):
@@ -13,6 +14,7 @@ def test_send_trd_model(email: str):
 
 class SendTestEmail(EmailTemplate):
     template: str = 'test.html'
+    work_dir = os.path.dirname(__file__)
 
 
 class Command(BaseCommand):
