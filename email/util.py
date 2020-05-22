@@ -1,7 +1,7 @@
-from typing import Dict, Union, List, Type, Set, Optional
+from typing import Dict, Union, List, Type, Tuple, Optional
 import os
 from jinja2 import Environment, select_autoescape, FileSystemLoader
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 
 
 class ProcessEmail(type):
@@ -52,6 +52,8 @@ class CingTaEmail(object):
                  model: Type[EmailTemplate] = None,
                  msg: Union[str, None] = None,
                  from_email_name: str = 'cingta',
+                 attachments: List[Tuple[str, Union[str, bytes],
+                                         Optional[str]]] = [],
                  **kwargs) -> None:
 
         self.SENED_EMAIL = self.SENED_EMAIL.format(name=from_email_name)
@@ -62,7 +64,7 @@ class CingTaEmail(object):
         self.kwargs: Dict[str, str] = kwargs
         self.attachments = []
 
-        self.email_message = EmailMessage(
+        self.email_message = EmailMultiAlternatives(
             subject=title,
             body=msg,
             from_email=self.SENED_EMAIL,
@@ -85,9 +87,7 @@ class CingTaEmail(object):
     #     return data
 
     def get_html_text(self) -> str:
-        if self.msg:
-            return ''
-        elif 'html' in self.kwargs:
+        if 'html' in self.kwargs:
             html_text = self.kwargs.setdefault('html_string', '')
             return html_text
         elif self.template:
@@ -98,7 +98,7 @@ class CingTaEmail(object):
     def process_email(self):
         html_text = self.get_html_text()
         if html_text:
-            self.email_message.attach('index.html', html_text, 'text/html')
+            self.email_message.attach_alternative(html_text, 'text/html')
         for name, content in self.attachments:
             self.email_message.attach(name, content)
 

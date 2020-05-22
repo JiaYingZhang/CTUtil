@@ -12,9 +12,17 @@ def test_send_trd_model(email: str):
     send_cingta_email(title='测试', to_email=[email], model=SendTestEmail)
 
 
+def test_send_att_email(email: str):
+    send_cingta_email(
+        title='测试发送附件',
+        to_email=[email],
+        model=SendTestEmail,
+        attachments=[('测试.txt', b'dadasdasdadadasdaadadabfuafvuyafvua', None)])
+
+
 class SendTestEmail(EmailTemplate):
     template: str = 'test.html'
-    work_dir = os.path.dirname(__file__)
+    work_dir = os.path.dirname(os.path.dirname(__file__))
 
 
 class Command(BaseCommand):
