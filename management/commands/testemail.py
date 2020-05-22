@@ -9,7 +9,7 @@ def test_send_email(email: str):
 
 
 def test_send_trd_model(email: str):
-    send_cingta_email(title='测试', to_email=[email], model=SendTestEmail)
+    send_cingta_email(title='测试发送html', to_email=[email], model=SendTestEmail)
 
 
 def test_send_att_email(email: str):
@@ -37,6 +37,10 @@ class Command(BaseCommand):
                             dest='model',
                             action='store_true',
                             default=False)
+        parser.add_argument('-f',
+                            dest='attachment',
+                            action='store_true',
+                            default=False)
 
     def handle(self, *args, **options):
         name: str = options.setdefault('name', '')
@@ -44,5 +48,6 @@ class Command(BaseCommand):
             raise ValueError('Not email to send')
         if options.setdefault('test'):
             test_send_trd_model(name)
-        else:
-            test_send_email(name)
+        if options.setdefault('attachment'):
+            test_send_att_email(name)
+        send_cingta_email(name)
