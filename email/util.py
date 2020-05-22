@@ -1,6 +1,7 @@
 from typing import Dict, Union, List, Type, Set, Optional
 import os
 from jinja2 import Environment, select_autoescape, FileSystemLoader
+from django.core.mail import EmailMessage
 
 
 class ProcessEmail(type):
@@ -16,6 +17,21 @@ class BaseEmail(metaclass=ProcessEmail):
     template: str = ''
     work_dir: str = os.getcwd()
     template_dir: Optional[str] = None
+
+    @classmethod
+    def render(cls, *args, **kwargs):
+        if not cls.template:
+            return ''
+        loader_dir = [
+            os.path.join(cls.work_dir, 'template'),
+            os.path.join(cls.work_dir, 'templates'),
+        ]
+        if cls.template_dir:
+            loader_dir.append(cls.template_dir)
+        _env = Environment(loader=FileSystemLoader(loader_dir),
+                           auto_reload=select_autoescape(['html', 'xml']))
+        template = _env.get_template(cls.template).render(**kwargs)
+        return template
 
 
 class EmailTemplate(BaseEmail):
@@ -40,50 +56,55 @@ class CingTaEmail(object):
 
         self.SENED_EMAIL = self.SENED_EMAIL.format(name=from_email_name)
         self.msg: str = msg if msg else ''
-
         self.to_email: List[str] = to_email
-        self._html_model: Optional[Type[EmailTemplate]] = model
+        self.template: Optional[Type[EmailTemplate]] = model
         self.title = title
         self.kwargs: Dict[str, str] = kwargs
+        self.attachments = []
 
-    def _make_email_text(self) -> str:
-        text = """{msg}""".format(msg=self.msg)
-        return text
+        self.email_message = EmailMessage(
+            subject=title,
+            body=msg,
+            from_email=self.SENED_EMAIL,
+            to=to_email,
+        )
 
-    @property
-    def email_msg(self) -> dict:
-        data = {
-            'subject': self.title,
-            'message': self._make_email_text(),
-            'from_email': self.SENED_EMAIL,
-            'recipient_list': self.to_email,
-            'html_message': self._html_text(),
-        }
-        return data
+    # def _make_email_text(self) -> str:
+    #     text = """{msg}""".format(msg=self.msg)
+    #     return text
 
-    def _html_text(self) -> str:
+    # @property
+    # def email_msg(self) -> dict:
+    #     data = {
+    #         'subject': self.title,
+    #         'message': self._make_email_text(),
+    #         'from_email': self.SENED_EMAIL,
+    #         'recipient_list': self.to_email,
+    #         'html_message': self._html_text(),
+    #     }
+    #     return data
+
+    def get_html_text(self) -> str:
         if self.msg:
-            return self.msg
+            return ''
         elif 'html' in self.kwargs:
             html_text = self.kwargs.setdefault('html_string', '')
             return html_text
-        elif self._html_model:
-            loader_dir = [
-                os.path.join(self._html_model.work_dir, 'template'),
-                os.path.join(self._html_model.work_dir, 'templates'),
-            ]
-            if self._html_model.template_dir:
-                loader_dir.append(self._html_model.template_dir)
-            _env = Environment(loader=FileSystemLoader(loader_dir),
-                               auto_reload=select_autoescape(['html', 'xml']))
-            template = _env.get_template(
-                self._html_model.template).render(**self.kwargs)
-            return template
+        elif self.template:
+            return self.template.render(**self.kwargs)
         else:
             raise EmailContentError
 
+    def process_email(self):
+        html_text = self.get_html_text()
+        if html_text:
+            self.email_message.attach('index.html', html_text, 'text/html')
+        for name, content in self.attachments:
+            self.email_message.attach(name, content)
+
     def __unicode__(self) -> str:
-        return 'send email: {} to {}'.format(
-            self.SUBJECT_STRING,
-            self.email,
-        )
+        return f'send email: {self.SENED_EMAIL} to {self.to_email}'
+
+    def send(self):
+        self.process_email()
+        self.email_message.send()

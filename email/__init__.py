@@ -15,7 +15,8 @@ def send_cingta_email(title: str,
     mail: CingTaEmail = CingTaEmail(title, to_email, model, msg,
                                     from_email_name, **kwargs)
     try:
-        send_mail(**mail.email_msg)
+        # send_mail(**mail.email_msg)
+        mail.send()
         return None
     except Exception as e:
         raise e
