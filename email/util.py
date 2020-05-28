@@ -86,8 +86,8 @@ class CingTaEmail(object):
             self.email_message.attach_alternative(html_text, 'text/html')
 
         # 当body为空并且有附件是情况下 不显示html
-        if self.attachments and not self.email_message.body:
-            self.email_message.body = 'https://www.cingta.com'
+        if not self.email_message.body:
+            self.email_message.body = '青塔'
         for name, content in self.attachments:
             self.email_message.attach(name, content)
 
