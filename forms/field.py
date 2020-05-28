@@ -243,7 +243,9 @@ class Form(metaclass=FormMeta):
             else:
                 ins = self.model.objects.filter(**{pk_key: pk}).first()
                 if not ins:
-                    return None
+                    data[pk_key] = pk
+                    ins = self.model.objects.create(**data)
+                    return ins
                 for key, value in data.items():
                     setattr(ins, key, value)
                 ins.save()
