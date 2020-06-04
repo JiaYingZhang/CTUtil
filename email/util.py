@@ -62,7 +62,7 @@ class CingTaEmail(object):
         self.template: Optional[Type[EmailTemplate]] = model
         self.title = title
         self.kwargs: Dict[str, str] = kwargs
-        self.attachments = []
+        self.attachments = attachments
 
         self.email_message = EmailMultiAlternatives(
             subject=title,
@@ -88,8 +88,8 @@ class CingTaEmail(object):
         # 当body为空并且有附件是情况下 不显示html
         if not self.email_message.body:
             self.email_message.body = '青塔'
-        for name, content in self.attachments:
-            self.email_message.attach(name, content)
+        for name, content, _ in self.attachments:
+            self.email_message.attach(name, content, _)
 
     def __unicode__(self) -> str:
         return f'send email: {self.SENED_EMAIL} to {self.to_email}'
