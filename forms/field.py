@@ -28,11 +28,13 @@ class Field(object):
                  backend: Optional[str] = None,
                  ignore: bool = False,
                  valid_func: Optional[Callable[[Any], Tuple[Any, str]]] = None,
-                 display: Optional[Callable[[Any], Any]] = None):
+                 display: Optional[Callable[[Any], Any]] = None,
+                 method_name: Optional[str] = None):
         self.backend = backend
         self._valid_func = valid_func
         self.ignore = ignore
         self._display = display or self.display
+        self.method_name = method_name
 
     def valid(self, value: Any) -> Tuple[Any, str]:
         return value, ''
@@ -175,7 +177,7 @@ class FormMeta(type):
 class Form(metaclass=FormMeta):
 
     field_mapping: Dict[str, Optional[str]]
-    fields: Dict[str, Any]
+    fields: Dict[str, Field]
 
     def __init__(self,
                  data: Union[Dict[str, Any], Type[models.Model]],
@@ -220,7 +222,12 @@ class Form(metaclass=FormMeta):
                     value = _getattr(field.backend, None)
                 except:
                     value = None
-                if field._display:
+                if field.method_name:
+                    method = getattr(self, field.method_name, None)
+                    if method is None:
+                        raise TypeError(f'Form must {field.method_name} method')
+                    self._front[front] = method(value)
+                elif field._display:
                     self._front[front] = field._display(value)
                 else:
                     self._front[front] = value
