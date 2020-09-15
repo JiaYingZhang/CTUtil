@@ -69,6 +69,7 @@ class CingTaEmail(object):
             body=msg,
             from_email=self.SENED_EMAIL,
             to=to_email,
+            cc=self.kwargs.pop('cc', None),
         )
 
     def get_html_text(self) -> str:
