@@ -61,8 +61,14 @@ def queryset_paging(queryset: Iterable[Any], page: int, page_size: int):
     return queryset[(page - 1) * page_size:page * page_size]
 
 
-def jstimestamp_to_datetime(jstimestamp: int, tz: str = 'Asia/Shanghai'):
-    return datetime.fromtimestamp(jstimestamp // 1000, tz=pytz.timezone(tz))
+def jstimestamp_to_datetime(jstimestamp: int,
+                            tz: str = 'Asia/Shanghai',
+                            use_tz: bool = False):
+    if use_tz:
+        return datetime.fromtimestamp(jstimestamp // 1000,
+                                      tz=pytz.timezone(tz))
+    else:
+        return datetime.fromtimestamp(jstimestamp // 1000)
 
 
 def get_django_all_url(urlpatterns: List[Any]):
