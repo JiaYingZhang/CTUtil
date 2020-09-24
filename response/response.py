@@ -39,7 +39,8 @@ def resp_to_file(file: Union[str, bytes], filename: str) -> HttpResponse:
     return resp
 
 
-def resp_to_stream(stream: Generator[Any], filename: str) -> HttpResponse:
+def resp_to_stream(stream: Generator[Any, Any, Any],
+                   filename: str) -> HttpResponse:
     resp = StreamingHttpResponse(stream,
                                  content_type='application/octet-stream')
     resp['Content-Disposition'] = f'attachment; filename="{filename}"'
