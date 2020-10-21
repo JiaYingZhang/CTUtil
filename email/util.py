@@ -79,7 +79,7 @@ class CingTaEmail(object):
         elif self.template:
             return self.template.render(**self.kwargs)
         else:
-            raise EmailContentError
+            return ''
 
     def process_email(self):
         html_text = self.get_html_text()
