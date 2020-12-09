@@ -81,7 +81,7 @@ class JsTimeStampField(Field):
         if err != '':
             return value, err
         if not value:
-            return value, err
+            return None, err
         return jstimestamp_to_datetime(int(value)), err
 
     def display(self, value: Any) -> Any:
